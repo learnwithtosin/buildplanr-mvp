@@ -1,8 +1,47 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+enum PlanStatus {
+  awaiting_answers
+  processing
+  completed
+  failed
+}
+
+model BusinessPlan {
+  id               String     @id @default(uuid())
+  businessIdea     String
+  industryCategory String?
+  region           String?
+  questionnaire    Json
+  answers          Json?
+  status           PlanStatus @default(awaiting_answers)
+  content          Json?
+  modelUsed        String?
+  generatedAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([status])
+}
+
+model KnowledgeChunk {
+  id         String                       @id @default(uuid())
+  sourceName String
+  sourceUrl  String?
+  category   String
+  region     String?
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime                     @default(now())
+
+  @@index([category])
+  @@index([region])
 }
