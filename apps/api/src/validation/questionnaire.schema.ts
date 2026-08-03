@@ -6,10 +6,7 @@ import { z } from "zod";
  */
 export const questionnaireRequestSchema = z.object({
   businessIdea: z
-    .string({
-      required_error: "businessIdea is required",
-      invalid_type_error: "businessIdea must be a string",
-    })
+    .string({ error: "businessIdea is required and must be a string" })
     .min(10, "businessIdea must be at least 10 characters")
     .max(500, "businessIdea must be at most 500 characters"),
 });

@@ -1,18 +1,11 @@
-// import app from "./app";
-// import { env } from "./config/env";
-
-// app.listen(Number(env.PORT), () => {
-//   console.log(`API running on port ${env.PORT}`);
-// });
-
-import "dotenv/config";
 import { createApp } from "./app.js";
+import { env } from "./config/env";
 
-const port = Number(process.env["PORT"] ?? 3001);
+const port = Number(env.PORT);
 
 const app = createApp();
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console
-  console.log(`api listening on port ${port}`);
+  console.log(`API running on port ${port}`);
 });
