@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Question } from "types";
+import AppHeader from "@/components/AppHeader";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 
 interface StoredQuestionnaire {
@@ -85,12 +86,7 @@ export default function QuestionnairePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
-      {/* ── Header ───────────────────────────────────────────── */}
-      <header className="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <span className="text-lg font-semibold text-green-700 dark:text-green-400">
-          BuildPlanr
-        </span>
-      </header>
+      <AppHeader />
 
       {/* ── Main ─────────────────────────────────────────────── */}
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12">
