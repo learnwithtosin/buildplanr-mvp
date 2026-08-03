@@ -1,19 +1,29 @@
-import express from "express";
+import express, { type Express } from "express";
 import cors from "cors";
 
 import { env } from "./config/env";
 import healthRouter from "./routes/health.route";
+import { questionnaireRouter } from "./routes/questionnaire.routes.js";
+import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 
-const app = express();
+export function createApp(): Express {
+  const app = express();
 
-app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-  })
-);
+  app.use(
+    cors({
+      origin: env.CORS_ORIGIN,
+    }),
+  );
+  app.use(express.json());
 
-app.use(express.json());
+  app.use("/health", healthRouter);
+  app.use("/api/questionnaire", questionnaireRouter);
 
-app.use("/health", healthRouter);
+  // Plan generation, status polling, and export endpoints are not
+  // implemented yet — only the questionnaire endpoint above is wired up.
 
-export default app;
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}
