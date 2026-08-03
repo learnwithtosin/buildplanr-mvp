@@ -1,4 +1,9 @@
-import type { PostQuestionnaireRequest, PostQuestionnaireResponse } from "types";
+import type {
+  PostQuestionnaireRequest,
+  PostQuestionnaireResponse,
+  PostBusinessPlanRequest,
+  PostBusinessPlanResponse,
+} from "types";
 
 /**
  * Base URL for the backend API (see docs/API.md). Configured via
@@ -8,14 +13,13 @@ const API_BASE_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:500
 
 /**
  * --- TEMPORARY MOCK -----------------------------------------------------
- * The backend's POST /api/questionnaire may not be deployed/ready yet.
  * While NEXT_PUBLIC_USE_MOCK_API=true, requests below are short-circuited
  * with a fake response matching packages/types, so frontend work isn't
  * blocked on the backend.
  *
  * TO REMOVE ONCE THE BACKEND IS READY:
- *   1. Delete the `if (USE_MOCK_API)` block in `postQuestionnaire` below.
- *   2. Delete `mockPostQuestionnaire`.
+ *   1. Delete every `if (USE_MOCK_API)` block below.
+ *   2. Delete all `mock*` functions.
  *   3. Delete NEXT_PUBLIC_USE_MOCK_API from .env.example / .env.local.
  * -------------------------------------------------------------------------
  */
@@ -35,6 +39,16 @@ function mockPostQuestionnaire(): Promise<PostQuestionnaireResponse> {
           { id: "q4", label: "Will you sell online, in person, or both?", type: "text" },
         ],
       });
+    }, MOCK_LATENCY_MS);
+  });
+}
+
+function mockSubmitBusinessPlan(
+  planId: string
+): Promise<PostBusinessPlanResponse> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ planId, status: "processing" });
     }, MOCK_LATENCY_MS);
   });
 }
@@ -77,4 +91,32 @@ export async function postQuestionnaire(
   }
 
   return (await res.json()) as PostQuestionnaireResponse;
+}
+
+/**
+ * POST /api/business-plans — submit questionnaire answers and start
+ * plan generation. See docs/API.md.
+ */
+export async function submitBusinessPlan(
+  body: PostBusinessPlanRequest,
+): Promise<PostBusinessPlanResponse> {
+  if (USE_MOCK_API) {
+    return mockSubmitBusinessPlan(body.planId);
+  }
+
+  const res = await fetch(`${API_BASE_URL}/business-plans`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const message = await res
+      .json()
+      .then((data: { error?: string }) => data.error)
+      .catch(() => undefined);
+    throw new ApiError(message ?? "Failed to submit business plan.", res.status);
+  }
+
+  return (await res.json()) as PostBusinessPlanResponse;
 }
