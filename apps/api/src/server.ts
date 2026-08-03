@@ -1,6 +1,11 @@
-import app from "./app";
+import { createApp } from "./app.js";
 import { env } from "./config/env";
 
-app.listen(Number(env.PORT), () => {
-  console.log(`API running on port ${env.PORT}`);
+const port = Number(env.PORT);
+
+const app = createApp();
+
+app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`API running on port ${port}`);
 });
