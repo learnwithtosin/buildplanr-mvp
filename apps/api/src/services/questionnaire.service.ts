@@ -1,5 +1,6 @@
 import type { PostQuestionnaireResponse, Question } from "types";
-import { prisma } from "../lib/prisma.js";
+import { Prisma } from "@prisma/client";
+import { prisma } from "../config/prisma";
 import { createStructuredResponse } from "./openai.client.js";
 import { UpstreamAIError } from "../errors/app-error.js";
 import {
@@ -99,7 +100,7 @@ export async function createQuestionnaire(
     data: {
       businessIdea,
       status: "awaiting_answers",
-      questionnaire: questions,
+      questionnaire: JSON.parse(JSON.stringify(questions)),
     },
     select: { id: true },
   });
