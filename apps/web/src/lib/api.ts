@@ -3,6 +3,7 @@ import type {
   PostQuestionnaireResponse,
   PostBusinessPlanRequest,
   PostBusinessPlanResponse,
+  GetBusinessPlanResponse,
 } from "types";
 
 /**
@@ -52,6 +53,7 @@ function mockSubmitBusinessPlan(
     }, MOCK_LATENCY_MS);
   });
 }
+
 /** --- end mock --------------------------------------------------------- */
 
 /** Thrown when the backend responds with a non-2xx status. */
@@ -119,4 +121,22 @@ export async function submitBusinessPlan(
   }
 
   return (await res.json()) as PostBusinessPlanResponse;
+}
+
+/**
+ * GET /api/business-plans/:id — poll plan status; returns processing,
+ * completed (with content), or failed. See docs/API.md.
+ */
+export async function getBusinessPlan(planId: string): Promise<GetBusinessPlanResponse> {
+  const res = await fetch(`${API_BASE_URL}/business-plans/${encodeURIComponent(planId)}`);
+
+  if (!res.ok) {
+    const message = await res
+      .json()
+      .then((data: { error?: string }) => data.error)
+      .catch(() => undefined);
+    throw new ApiError(message ?? "Failed to fetch plan status.", res.status);
+  }
+
+  return (await res.json()) as GetBusinessPlanResponse;
 }
