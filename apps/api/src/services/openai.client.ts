@@ -96,3 +96,37 @@ export async function createStructuredResponse(
 
   return text;
 }
+
+/**
+ * Model used for all embeddings across the app (seeding and retrieval).
+ * Both sides MUST use the same model — cosine similarity is only
+ * meaningful when compared vectors came from the same embedding space.
+ */
+const EMBEDDING_MODEL = "text-embedding-3-small";
+
+/**
+ * Generates an embedding vector for a piece of text. Used both by the
+ * knowledge-base seed script and by RAG retrieval at query time — always
+ * goes through this single function so both sides can never drift onto
+ * different embedding models.
+ */
+export async function createEmbedding(text: string): Promise<number[]> {
+  const client = getClient();
+
+  let response: OpenAI.Embeddings.CreateEmbeddingResponse;
+  try {
+    response = await client.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: text,
+    });
+  } catch (error) {
+    throw new UpstreamAIError("OpenAI embedding request failed", error);
+  }
+
+  const embedding = response.data[0]?.embedding;
+  if (!embedding) {
+    throw new UpstreamAIError("OpenAI embedding response contained no data");
+  }
+
+  return embedding;
+}
