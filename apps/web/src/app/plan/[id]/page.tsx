@@ -15,6 +15,7 @@ import { useParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import LoadingState from "@/components/LoadingState";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
+import DownloadDocxButton from "@/components/DownloadDocxButton";
 import InlineError from "@/components/InlineError";
 import { usePlanStatus } from "@/lib/usePlanStatus";
 
@@ -74,7 +75,10 @@ export default function PlanPage() {
               </p>
             </div>
 
-            <DownloadPdfButton planId={planId} />
+            <div className="flex flex-wrap items-start gap-3">
+              <DownloadPdfButton planId={planId} />
+              <DownloadDocxButton planId={planId} />
+            </div>
           </div>
         )}
       </main>
