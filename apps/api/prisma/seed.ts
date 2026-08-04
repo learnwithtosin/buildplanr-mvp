@@ -1,12 +1,7 @@
-import dotenv from "dotenv";
-import path from "path";
+import "../src/config/env";
 import { randomUUID } from "crypto";
+import { prisma } from "../src/config/prisma";
 import OpenAI from "openai";
-
-dotenv.config({
-  path: path.resolve(process.cwd(), "../../.env"),
-});
-
 
 const apiKey = process.env.OPENAI_API_KEY;
 
@@ -14,9 +9,7 @@ if (!apiKey) {
   throw new Error("OPENAI_API_KEY is missing");
 }
 
-const openai = new OpenAI({
-    apiKey,
-});
+const openai = new OpenAI({ apiKey });
 
 interface SeedChunk {
   sourceName: string;
@@ -111,7 +104,6 @@ function toVectorLiteral(embedding: number[]): string {
 }
 
 async function getEmbedding(text: string): Promise<number[]> {
-    
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
     input: text,
@@ -120,16 +112,10 @@ async function getEmbedding(text: string): Promise<number[]> {
 }
 
 async function main() {
-    
-  const { prisma } = await import("../src/config/prisma");
-
   let inserted = 0;
   let skipped = 0;
 
   for (const chunk of seedChunks) {
-
-    console.log(`Processing: ${chunk.sourceName}`);
-
     const existing = await prisma.knowledgeChunk.findFirst({
       where: { sourceName: chunk.sourceName },
       select: { id: true },
@@ -153,8 +139,6 @@ async function main() {
   }
 
   console.log(`Seed complete: ${inserted} inserted, ${skipped} skipped (already existed).`);
-
-  await prisma.$disconnect();
 }
 
 main()
@@ -162,6 +146,6 @@ main()
     console.error("Seed failed:", error);
     process.exit(1);
   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
