@@ -112,14 +112,22 @@ async function requestJson<T>(
   }
 
   if (!res.ok) {
-    const serverMessage = await res
-      .json()
-      .then((data: { error?: string }) => data.error)
-      .catch(() => undefined);
+    const serverMessage = isJsonResponse(res)
+      ? await res
+          .json()
+          .then((data: { error?: string }) => data.error)
+          .catch(() => undefined)
+      : undefined;
     throw new ApiError(serverMessage ?? defaultMessageForStatus(res.status, fallbackMessage), res.status);
   }
 
   return (await res.json()) as T;
+}
+
+/** True when the response body is actually JSON (e.g. not an HTML error page from a proxy/gateway). */
+function isJsonResponse(res: Response): boolean {
+  const contentType = res.headers.get("content-type");
+  return contentType !== null && contentType.includes("application/json");
 }
 
 /**
