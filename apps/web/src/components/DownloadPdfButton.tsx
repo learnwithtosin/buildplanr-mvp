@@ -43,7 +43,9 @@ export default function DownloadPdfButton({ planId }: Props) {
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 0);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
