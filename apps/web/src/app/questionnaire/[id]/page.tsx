@@ -17,6 +17,7 @@ import { useParams, useRouter } from "next/navigation";
 import type { Question } from "types";
 import AppHeader from "@/components/AppHeader";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
+import InlineError from "@/components/InlineError";
 
 interface StoredQuestionnaire {
   planId: string;
@@ -100,12 +101,7 @@ export default function QuestionnairePage() {
 
         {state.status === "error" && (
           <div className="flex flex-col gap-4">
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
-            >
-              {state.message}
-            </p>
+            <InlineError message={state.message} />
             <a
               href="/"
               className="self-start text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"

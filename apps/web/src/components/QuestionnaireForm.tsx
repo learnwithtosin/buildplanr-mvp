@@ -2,7 +2,8 @@
 
 import { useState, FormEvent } from "react";
 import type { Question, AnswersMap } from "types";
-import { submitBusinessPlan } from "@/lib/api";
+import { ApiError, submitBusinessPlan } from "@/lib/api";
+import InlineError from "@/components/InlineError";
 
 interface Props {
   planId: string;
@@ -46,7 +47,9 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
       const res = await submitBusinessPlan({ planId, answers });
       onSuccess(res.planId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      // submitBusinessPlan always throws ApiError (network failures included),
+      // but guard for any truly unexpected throw anyway.
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -101,11 +104,7 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
         </div>
       ))}
 
-      {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-          {error}
-        </p>
-      )}
+      {error && <InlineError message={error} />}
 
       <button
         type="submit"

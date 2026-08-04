@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, postQuestionnaire } from "@/lib/api";
+import InlineError from "@/components/InlineError";
 
 const MIN_LENGTH = 10;
 const MAX_LENGTH = 500;
@@ -38,6 +39,8 @@ export default function IdeaForm() {
       router.push(`/questionnaire/${planId}`);
     } catch (err) {
       setIsSubmitting(false);
+      // postQuestionnaire always throws ApiError (network failures included),
+      // but guard for any truly unexpected throw anyway.
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     }
   }
@@ -65,7 +68,7 @@ export default function IdeaForm() {
         </span>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <InlineError message={error} />}
 
       <button
         type="submit"
