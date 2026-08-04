@@ -54,58 +54,6 @@ function mockSubmitBusinessPlan(
   });
 }
 
-/**
- * Mock for GET /api/business-plans/:id.
- * Returns "processing" for the first 4 calls (tracked per planId), then
- * "completed" with a sample plan so the polling flow can be tested end-to-end
- * without a running backend.
- */
-const mockPollCounts: Record<string, number> = {};
-
-function mockGetBusinessPlan(planId: string): Promise<GetBusinessPlanResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      mockPollCounts[planId] = (mockPollCounts[planId] ?? 0) + 1;
-
-      if (mockPollCounts[planId] < 5) {
-        resolve({ status: "processing" });
-        return;
-      }
-
-      resolve({
-        status: "completed",
-        content: {
-          executiveSummary:
-            "A Lagos-based buka restaurant serving authentic Nigerian cuisine to office workers and families in Lekki Phase 1.",
-          businessDescription:
-            "The business will operate a dine-in and takeaway restaurant focusing on regional Nigerian dishes prepared fresh daily.",
-          marketAnalysis:
-            "The Lekki Phase 1 area has a large population of middle-income workers with limited quality local food options during lunch hours.",
-          marketingStrategy:
-            "Social media marketing on Instagram and WhatsApp Business, with loyalty cards and referral discounts for repeat customers.",
-          operationsPlan:
-            "Operating hours 7am–9pm Monday to Saturday. Staff of 8: 2 cooks, 4 servers, 1 cashier, 1 manager.",
-          financialPlan:
-            "Revenue target of ₦2.5M/month by month 6 based on 150 covers/day at an average spend of ₦1,800.",
-          startupCostEstimate:
-            "₦4.2M: kitchen equipment ₦1.8M, rent deposit ₦900k, initial stock ₦600k, fit-out ₦900k.",
-          operatingCostEstimate:
-            "₦1.1M/month: rent ₦350k, salaries ₦480k, utilities ₦120k, stock replenishment ₦150k.",
-          breakEvenEstimate:
-            "Estimated break-even at month 4 assuming 70% capacity utilisation.",
-          cashFlowProjection:
-            "Negative in months 1–3 (−₦600k avg), break-even month 4, positive from month 5 onward.",
-          regulatoryConsiderations:
-            "CAC business name registration, NAFDAC food handler certification, Lagos State Environmental Health permit, fire safety certificate.",
-          risks:
-            "Rising food prices, generator fuel costs, staff turnover, and competition from new entrants in the Lekki corridor.",
-          recommendations:
-            "Negotiate a 2-year lease to lock in rent, invest in a 10KVA generator from day one, and build a WhatsApp broadcast list before opening.",
-        },
-      });
-    }, MOCK_LATENCY_MS);
-  });
-}
 /** --- end mock --------------------------------------------------------- */
 
 /** Thrown when the backend responds with a non-2xx status. */
@@ -180,10 +128,6 @@ export async function submitBusinessPlan(
  * completed (with content), or failed. See docs/API.md.
  */
 export async function getBusinessPlan(planId: string): Promise<GetBusinessPlanResponse> {
-  if (USE_MOCK_API) {
-    return mockGetBusinessPlan(planId);
-  }
-
   const res = await fetch(`${API_BASE_URL}/business-plans/${encodeURIComponent(planId)}`);
 
   if (!res.ok) {

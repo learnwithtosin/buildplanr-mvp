@@ -22,18 +22,15 @@ export default function PlanPage() {
 
   const { data, isLoading, error, isDone } = usePlanStatus(planId);
 
+  const isProcessing = isLoading || data?.status === "processing";
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
       <AppHeader />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-6 py-12">
-        {/* ── Initial fetch ───────────────────────────────── */}
-        {isLoading && <LoadingState planId={planId} />}
-
-        {/* ── Polling / still processing ──────────────────── */}
-        {!isLoading && !isDone && !error && (
-          <LoadingState planId={planId} />
-        )}
+        {/* ── Loading / processing ────────────────────────── */}
+        {isProcessing && <LoadingState planId={planId} />}
 
         {/* ── Error ───────────────────────────────────────── */}
         {error && (
