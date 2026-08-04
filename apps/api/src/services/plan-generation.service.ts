@@ -216,7 +216,7 @@ async function generatePlanContent(
   const result = planContentSchema.safeParse(parsed);
   if (!result.success) {
     throw new UpstreamAIError(
-      `OpenAI response did not match the expected plan shape: ${result.error.message}`,
+      `OpenAI returned an invalid structured response.`,
     );
   }
 
