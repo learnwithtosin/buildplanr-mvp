@@ -15,6 +15,7 @@ import { useParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import LoadingState from "@/components/LoadingState";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
+import InlineError from "@/components/InlineError";
 import { usePlanStatus } from "@/lib/usePlanStatus";
 
 export default function PlanPage() {
@@ -33,15 +34,10 @@ export default function PlanPage() {
         {/* ── Loading / processing ────────────────────────── */}
         {isProcessing && <LoadingState planId={planId} />}
 
-        {/* ── Error ───────────────────────────────────────── */}
+        {/* ── Error (network/fetch failure while polling) ───── */}
         {error && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
-            >
-              {error.message}
-            </p>
+            <InlineError message={error.message} />
             <a
               href="/"
               className="text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"
@@ -51,15 +47,12 @@ export default function PlanPage() {
           </div>
         )}
 
-        {/* ── Failed status returned by the API ───────────── */}
+        {/* ── Generation failed (status: "failed" from the API) ───────────── */}
         {isDone && data?.status === "failed" && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
-            >
-              {"error" in data ? data.error : "Plan generation failed. Please try again."}
-            </p>
+            <InlineError
+              message={"error" in data ? data.error : "Plan generation failed. Please try again."}
+            />
             <a
               href="/"
               className="text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"
