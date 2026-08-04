@@ -14,6 +14,7 @@
 import { useParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import LoadingState from "@/components/LoadingState";
+import DownloadPdfButton from "@/components/DownloadPdfButton";
 import { usePlanStatus } from "@/lib/usePlanStatus";
 
 export default function PlanPage() {
@@ -70,13 +71,17 @@ export default function PlanPage() {
 
         {/* ── Completed — PlanView will be wired up here in a separate issue ── */}
         {isDone && data?.status === "completed" && (
-          <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-base font-medium text-zinc-700 dark:text-zinc-300">
-              Your plan is ready.
-            </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-600">
-              Plan ID: {planId}
-            </p>
+          <div className="flex w-full flex-col gap-6">
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-medium text-zinc-700 dark:text-zinc-300">
+                Your plan is ready.
+              </p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-600">
+                Plan ID: {planId}
+              </p>
+            </div>
+
+            <DownloadPdfButton planId={planId} />
           </div>
         )}
       </main>
