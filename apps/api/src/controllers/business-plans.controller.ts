@@ -1,9 +1,70 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma"; // ⚠️ confirm named export is `prisma`
 import { buildPlanPdf } from "../services/export-pdf.service";
 import { buildPlanDocx } from "../services/export-docx.service";
 import { samplePlanContent } from "../fixtures/sample-plan-content";
 import type { PlanContent } from "types";
+import { z } from "zod";
+import { businessPlanRequestSchema } from "../validation/business-plan.schema.js";
+import {
+  getBusinessPlanStatus,
+  submitAnswersAndStartGeneration,
+} from "../services/plan-generation.service.js";
+import { NotFoundError, ValidationError } from "../errors/app-error.js";
+
+/**
+ * POST /api/business-plans
+ * Submits questionnaire answers and starts plan generation. Responds 202
+ * with { planId, status: "processing" }; the client polls the GET endpoint.
+ */
+export async function postBusinessPlan(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const parseResult = businessPlanRequestSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    next(new ValidationError(parseResult.error.issues.map((i) => i.message).join("; ")));
+    return;
+  }
+
+  try {
+    const result = await submitAnswersAndStartGeneration(
+      parseResult.data.planId,
+      parseResult.data.answers,
+    );
+    res.status(202).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+const planIdParamSchema = z.string().uuid();
+
+/**
+ * GET /api/business-plans/:id
+ * Single polling endpoint (docs/API.md): { status } while processing,
+ * { status, content } once completed, { status, error } on failure.
+ * A non-UUID id maps to 404 — the endpoint only documents 200 and 404.
+ */
+export async function getBusinessPlan(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const idResult = planIdParamSchema.safeParse(req.params["id"]);
+  if (!idResult.success) {
+    next(new NotFoundError("Plan not found"));
+    return;
+  }
+
+  try {
+    const result = await getBusinessPlanStatus(idResult.data);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
 
 /**
  * GET /api/business-plans/:id/export/pdf
