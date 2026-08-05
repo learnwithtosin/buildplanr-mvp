@@ -63,7 +63,7 @@ export default function IdeaForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-xl flex-col gap-3">
-      <label htmlFor="businessIdea" className="text-sm font-medium text-zinc-700">
+      <label htmlFor="businessIdea" className="text-sm font-medium text-zinc-100">
         Describe your business idea
       </label>
 
@@ -75,10 +75,10 @@ export default function IdeaForm() {
         onChange={(event) => setBusinessIdea(event.target.value)}
         disabled={isSubmitting}
         placeholder="e.g. A mobile car wash service for busy professionals in Lagos..."
-        className="w-full rounded-lg border border-zinc-300 p-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+        className="w-full rounded-lg border border-zinc-300 p-3 text-base text-zinc-100 placeholder:text-zinc-400 focus:border-zinc-200 focus:outline-none disabled:opacity-60"
       />
 
-      <div className="flex items-center justify-between text-sm text-zinc-500">
+      <div className="flex items-center justify-between text-sm text-zinc-100">
         <span className={isTooLong ? "text-red-600" : undefined}>
           {length}/{MAX_LENGTH} characters
         </span>
@@ -89,7 +89,7 @@ export default function IdeaForm() {
       <button
         type="submit"
         disabled={isSubmitting || !isValid}
-        className="w-full rounded-lg bg-zinc-900 px-5 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-zinc-950 px-5 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-950 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isSubmitting ? "Generating your questionnaire…" : "Get started"}
       </button>
