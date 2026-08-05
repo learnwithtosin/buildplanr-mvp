@@ -35,13 +35,29 @@ export default function IdeaForm() {
     setIsSubmitting(true);
 
     try {
-      const { planId } = await postQuestionnaire({ businessIdea: businessIdea.trim() });
-      router.push(`/questionnaire/${planId}`);
+      const response = await postQuestionnaire({
+        businessIdea: businessIdea.trim(),
+      });
+
+      // Store the questionnaire so the next page can read it.
+      sessionStorage.setItem(
+        `questionnaire:${response.planId}`,
+        JSON.stringify({
+          planId: response.planId,
+          questions: response.questions,
+        }),
+      );
+
+      router.push(`/questionnaire/${response.planId}`);
     } catch (err) {
       setIsSubmitting(false);
       // postQuestionnaire always throws ApiError (network failures included),
       // but guard for any truly unexpected throw anyway.
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     }
   }
 
