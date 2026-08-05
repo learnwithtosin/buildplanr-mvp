@@ -241,3 +241,45 @@ export async function downloadPlanPdf(planId: string): Promise<Blob> {
     throw new ApiError(NETWORK_ERROR_MESSAGE, 0);
   }
 }
+
+/**
+ * GET /api/business-plans/:id/export/docx — render and stream the plan as
+ * an editable Word document. Returns the raw Blob so the caller can trigger
+ * a browser download.
+ *
+ * Throws ApiError with the appropriate status on:
+ *   404 — unknown plan id
+ *   409 — plan not yet completed
+ *   500 — server-side rendering failure
+ *
+ * See docs/API.md.
+ */
+export async function downloadPlanDocx(planId: string): Promise<Blob> {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/business-plans/${encodeURIComponent(planId)}/export/docx`
+    );
+
+    if (!res.ok) {
+      const errorMessages: Record<number, string> = {
+        404: "Plan not found. It may have been deleted.",
+        409: "Your plan is still being generated. Please wait until it is complete before downloading.",
+        500: "The Word document could not be generated. Please try again.",
+      };
+      const message =
+        errorMessages[res.status] ??
+        `Could not download Word document (${res.status}). Please try again.`;
+      throw new ApiError(message, res.status);
+    }
+
+    return res.blob();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      "Unable to reach the server. Please check your internet connection and try again.",
+      0
+    );
+  }
+}
