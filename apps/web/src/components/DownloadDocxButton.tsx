@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { downloadPlanDocx, ApiError } from "@/lib/api";
+import InlineError from "@/components/InlineError";
 
 interface Props {
   /** The plan ID to download. */
@@ -96,11 +97,7 @@ export default function DownloadDocxButton({ planId }: Props) {
         )}
       </button>
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
+      {error && <InlineError message={error} />}
     </div>
   );
 }
