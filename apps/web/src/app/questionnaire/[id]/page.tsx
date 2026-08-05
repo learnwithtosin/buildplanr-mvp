@@ -86,7 +86,7 @@ export default function QuestionnairePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
+    <div className="flex min-h-screen flex-col bg-gray-900">
       <AppHeader />
 
       {/* ── Main ─────────────────────────────────────────────── */}
@@ -104,7 +104,7 @@ export default function QuestionnairePage() {
             <InlineError message={state.message} />
             <a
               href="/"
-              className="self-start text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"
+              className="self-start text-sm font-medium text-white underline underline-offset-2"
             >
               ← Back to home
             </a>

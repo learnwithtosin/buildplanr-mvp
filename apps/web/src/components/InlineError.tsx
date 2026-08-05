@@ -17,7 +17,7 @@ export default function InlineError({ message, className }: InlineErrorProps) {
   return (
     <p
       role="alert"
-      className={`rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400 ${className ?? ""}`}
+      className={`rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-white/20 dark:text-red-700 ${className ?? ""}`}
     >
       {message}
     </p>
