@@ -98,7 +98,7 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
               rows={3}
               placeholder="Your answer…"
               required
-              className="w-full rounded-lg border border-[#c1edf0] bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 transition-colors focus:border-[#16bfcc] focus:outline-none focus:ring-1 focus:ring-[#16bfcc]"
+              className="w-full rounded-lg border border-[#c1edf0] bg-[#effbfa] px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 transition-colors focus:border-[#16bfcc] focus:outline-none focus:ring-1 focus:ring-[#16bfcc]"
             />
           )}
         </div>
