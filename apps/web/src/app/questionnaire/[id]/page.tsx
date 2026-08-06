@@ -86,14 +86,14 @@ export default function QuestionnairePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-900">
+    <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <AppHeader />
 
       {/* ── Main ─────────────────────────────────────────────── */}
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 mt-10">
         {state.status === "loading" && (
           <div className="flex items-center justify-center py-24">
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <span className="text-sm text-[#122625]">
               Loading your questionnaire…
             </span>
           </div>
@@ -104,7 +104,7 @@ export default function QuestionnairePage() {
             <InlineError message={state.message} />
             <a
               href="/"
-              className="self-start text-sm font-medium text-white underline underline-offset-2"
+              className="self-start text-sm font-medium text-[#122625] underline underline-offset-2"
             >
               ← Back to home
             </a>
@@ -114,10 +114,10 @@ export default function QuestionnairePage() {
         {state.status === "ready" && (
           <>
             <div className="mb-10">
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-2xl font-semibold tracking-tight text-[#122625]">
                 Tell us about your business
               </h1>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-2 text-sm text-zinc-500">
                 Answer the questions below so we can tailor your Nigerian
                 business plan.
               </p>

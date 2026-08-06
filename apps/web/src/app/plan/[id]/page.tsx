@@ -28,7 +28,7 @@ export default function PlanPage() {
   const isProcessing = isLoading || data?.status === "processing";
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-900">
+    <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <AppHeader />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-6 py-12">
@@ -41,7 +41,7 @@ export default function PlanPage() {
             <InlineError message={error.message} />
             <a
               href="/"
-              className="text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"
+              className="text-sm font-medium text-[#12a8b0] underline underline-offset-2"
             >
               ← Start over
             </a>
@@ -56,7 +56,7 @@ export default function PlanPage() {
             />
             <a
               href="/"
-              className="text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-800 dark:text-green-400"
+              className="text-sm font-medium text-[#12a8b0] underline underline-offset-2"
             >
               ← Start over
             </a>

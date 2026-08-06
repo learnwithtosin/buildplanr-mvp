@@ -1,17 +1,10 @@
 import Link from "next/link";
 
-/**
- * Shared top navigation header used across all app pages.
- * Keeps the BuildPlanr brand mark consistent in one place.
- */
 export default function AppHeader() {
   return (
-    <header className="border-b border-zinc-200 bg-transparent px-6 py-4">
-      <Link
-        href="/"
-        className="text-lg font-semibold text-white"
-      >
-        BuildPlanr
+    <header className="fixed z-20 w-full border-b border-zinc-200 bg-white/80 px-6 py-4 pl-10 backdrop-blur">
+      <Link href="/" className="text-xl font-semibold text-[#122625]">
+        Build<span className="text-[#16bfcc]">Planr</span>
       </Link>
     </header>
   );

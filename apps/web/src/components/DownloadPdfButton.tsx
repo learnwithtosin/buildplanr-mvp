@@ -64,7 +64,7 @@ export default function DownloadPdfButton({ planId }: Props) {
         onClick={handleDownload}
         disabled={loading}
         aria-busy={loading}
-        className="inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-green-600 dark:hover:bg-green-700"
+        className="inline-flex items-center gap-2 rounded-full bg-[#0ca7b2] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#078d97] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? (
           <>
