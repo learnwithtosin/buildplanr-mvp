@@ -36,7 +36,7 @@ export default function LoadingState({ planId }: Props) {
       {/* Spinner */}
       <div
         aria-hidden="true"
-        className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-200 border-t-green-600 dark:border-zinc-700 dark:border-t-green-400"
+        className="h-12 w-12 animate-spin rounded-full border-4 border-[#122625] border-t-[#12a8b0] dark:border-[#122625] dark:border-t-[#12a8b0]"
       />
 
       {/* Heading */}
@@ -44,7 +44,7 @@ export default function LoadingState({ planId }: Props) {
         <p className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
           Generating your business plan…
         </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-zinc-800 dark:text-zinc-400">
           We&apos;re researching the Nigerian market and building your plan.
           This usually takes 30–60 seconds.
         </p>

@@ -59,8 +59,8 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-8">
       {questions.map((question, index) => (
         <div key={question.id} className="flex flex-col gap-3">
-          <label className="text-base font-medium text-zinc-800 dark:text-zinc-100">
-            <span className="mr-2 text-sm font-semibold text-green-700 dark:text-green-400">
+          <label className="text-base font-medium text-[#122625]">
+            <span className="mr-2 text-sm font-semibold text-[#122625]">
               {index + 1}.
             </span>
             {question.label}
@@ -76,10 +76,10 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
                     key={opt}
                     type="button"
                     onClick={() => handleBoolean(question.id, val)}
-                    className={`rounded-full border px-6 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 ${
+                    className={`rounded-full border px-6 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] ${
                       selected
-                        ? "border-green-700 bg-green-700 text-white"
-                        : "border-zinc-300 bg-white text-zinc-700 hover:border-green-600 hover:text-green-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
+                        ? "border-[#16bfcc] bg-[#16bfcc] text-white"
+                        : "border-zinc-300 bg-white text-zinc-700 hover:border-[#16bfcc] hover:text-[#16bfcc] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
                     }`}
                     aria-pressed={selected}
                   >
@@ -98,7 +98,7 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
               rows={3}
               placeholder="Your answer…"
               required
-              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 transition-colors focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+              className="w-full rounded-lg border border-[#c1edf0] bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 transition-colors focus:border-[#16bfcc] focus:outline-none focus:ring-1 focus:ring-[#16bfcc]"
             />
           )}
         </div>
@@ -109,7 +109,7 @@ export default function QuestionnaireForm({ planId, questions, onSuccess }: Prop
       <button
         type="submit"
         disabled={submitting}
-        className="mt-2 self-start rounded-full bg-green-700 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-2 self-start rounded-full bg-[#0ca7b2] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#12a8b0] focus:outline-none focus-visible:ring-2 focus-visible: disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? "Generating your plan…" : "Generate Business Plan"}
       </button>

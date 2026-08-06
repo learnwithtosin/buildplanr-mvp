@@ -21,7 +21,7 @@
 .bubble {
   position: absolute;
   border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.15) 70%);
+  background: radial-gradient(circle at 35% 30%, rgba(22, 191, 204, 0.9), rgba(22, 191, 204, 0.15) 70%);
   filter: blur(1px);
   animation-name: bubble-float;
   animation-timing-function: ease-in-out;
@@ -29,7 +29,7 @@
 }
 
 .dark .bubble {
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.04) 70%);
+  background: radial-gradient(circle at 35% 30%, rgba(22, 191, 204, 0.9), rgba(22, 191, 204, 0.04) 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
