@@ -23,7 +23,10 @@ export default function Home() {
       <AppHeader />
 
       <main className="relative z-10 flex flex-col items-center justify-center overflow-hidden px-6 pb-20 pt-28">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
           {BUBBLES.map((b, i) => (
             <span
               key={i}
@@ -43,17 +46,26 @@ export default function Home() {
 
         <div className="relative flex w-full max-w-xl flex-col items-center gap-8">
           <div className="flex flex-col items-center gap-4 text-center">
-            <span className="rounded-full bg-[#def7f6] px-3 py-1 text-sm font-bold italic text-[#169694]">
-              Built for the Nigerian market
+
+            <span className="inline-flex items-center rounded-full border border-[#bfecef] bg-white px-5 py-2 shadow-sm">
+              <span className="text-base">
+                🇳🇬
+              </span>
+
+              <span className="ml-2 text-sm font-semibold italic tracking-wide text-[#129ba4]">
+                Made for Nigerian founders
+              </span>
             </span>
 
             <h1 className="text-5xl font-bold leading-[1.15] tracking-tight text-[#122625]">
-              Turn your business idea into <span className="text-[#16bfcc]">a plan</span>
+              Turn your business idea into{" "}
+              <span className="text-[#16bfcc]">a plan</span>
             </h1>
 
             <p className="max-w-lg text-lg font-medium leading-relaxed text-[#6d7f7d]">
-              Describe what you want to build. We&apos;ll ask a few quick questions, then generate
-              a business plan grounded in Nigerian market and regulatory context.
+              Describe what you want to build. We&apos;ll ask a few quick
+              questions, then generate a business plan grounded in Nigerian
+              market and regulatory context.
             </p>
           </div>
 

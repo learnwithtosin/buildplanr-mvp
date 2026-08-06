@@ -11,6 +11,7 @@
  * render plan content itself.
  */
 
+import DocumentPreviewCard from "@/components/DocumentPreviewCard";
 import { useParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import LoadingState from "@/components/LoadingState";
@@ -63,21 +64,37 @@ export default function PlanPage() {
           </div>
         )}
 
-        {/* ── Completed — PlanView will be wired up here in a separate issue ── */}
+        {/* ── Completed ───────────────────────────────────────────── */}
         {isDone && data?.status === "completed" && (
-          <div className="flex w-full flex-col gap-6">
-            <div className="flex flex-col gap-1">
-              <p className="text-base font-medium text-zinc-700 dark:text-zinc-300">
-                Your plan is ready.
+          <div className="flex w-full flex-col gap-10">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-zinc-900">
+                🎉 Your Business Plan is Ready
+              </h1>
+
+              <p className="mt-2 text-zinc-500">
+                Review the available formats before downloading.
               </p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-600">
+
+              <p className="mt-3 text-xs text-zinc-400">
                 Plan ID: {planId}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-start gap-3">
-              <DownloadPdfButton planId={planId} />
-              <DownloadDocxButton planId={planId} />
+            <div className="grid gap-8 md:grid-cols-2">
+              <DocumentPreviewCard
+                type="pdf"
+                title="PDF Version"
+                description="Perfect for printing and sharing."
+                action={<DownloadPdfButton planId={planId} />}
+              />
+
+              <DocumentPreviewCard
+                type="docx"
+                title="Word Document"
+                description="Editable Microsoft Word format."
+                action={<DownloadDocxButton planId={planId} />}
+              />
             </div>
           </div>
         )}
