@@ -71,7 +71,7 @@ export default function PlanPage() {
         {isDone && data?.status === "completed" && (
           <div className="flex w-full flex-col gap-8 pb-12">
             <div className="text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+              <h1 className="font-display text-2xl font-semibold tracking-tight text-zinc-950">
                 Your business plan is ready
               </h1>
               <p className="mt-1 text-sm text-zinc-500">Plan ID: {planId}</p>

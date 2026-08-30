@@ -18,7 +18,9 @@ export default function ExecutiveSummaryPreview({ text }: ExecutiveSummaryPrevie
   return (
     <div className="flex h-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-zinc-950">Executive Summary</h2>
+        <h2 className="font-display text-lg font-semibold tracking-tight text-zinc-950">
+          Executive Summary
+        </h2>
         <p className="mt-1 text-xs text-zinc-500">
           The full plan — all 13 sections — is in your downloaded PDF or Word document.
         </p>
