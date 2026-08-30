@@ -3,8 +3,8 @@
 /**
  * /questionnaire/[id]
  *
- * Reads the questionnaire state (planId + questions array) that was
- * stored in sessionStorage by the idea-intake page under the key
+ * Reads the questionnaire state (planId + 3 pages) that was stored in
+ * sessionStorage by the idea-intake page under the key
  * `questionnaire:<planId>`.  If no state is found (e.g. direct URL
  * hit or session expired) a friendly error is shown with a link back
  * to the home page.
@@ -14,19 +14,20 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { Question } from "types";
+import Link from "next/link";
+import type { QuestionnairePage } from "types";
 import AppHeader from "@/components/AppHeader";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 import InlineError from "@/components/InlineError";
 
 interface StoredQuestionnaire {
   planId: string;
-  questions: Question[];
+  pages: QuestionnairePage[];
 }
 
 type PageState =
   | { status: "loading" }
-  | { status: "ready"; planId: string; questions: Question[] }
+  | { status: "ready"; planId: string; pages: QuestionnairePage[] }
   | { status: "error"; message: string };
 
 const SESSION_KEY_PREFIX = "questionnaire:";
@@ -58,8 +59,8 @@ export default function QuestionnairePage() {
 
       if (
         !parsed.planId ||
-        !Array.isArray(parsed.questions) ||
-        parsed.questions.length === 0
+        !Array.isArray(parsed.pages) ||
+        parsed.pages.length === 0
       ) {
         setState({
           status: "error",
@@ -68,7 +69,7 @@ export default function QuestionnairePage() {
         return;
       }
 
-      setState({ status: "ready", planId: parsed.planId, questions: parsed.questions });
+      setState({ status: "ready", planId: parsed.planId, pages: parsed.pages });
     } catch {
       setState({
         status: "error",
@@ -102,12 +103,12 @@ export default function QuestionnairePage() {
         {state.status === "error" && (
           <div className="flex flex-col gap-4">
             <InlineError message={state.message} />
-            <a
+            <Link
               href="/"
               className="self-start text-sm font-medium text-[#122625] underline underline-offset-2"
             >
               ← Back to home
-            </a>
+            </Link>
           </div>
         )}
 
@@ -125,7 +126,7 @@ export default function QuestionnairePage() {
 
             <QuestionnaireForm
               planId={state.planId}
-              questions={state.questions}
+              pages={state.pages}
               onSuccess={handleSuccess}
             />
           </>

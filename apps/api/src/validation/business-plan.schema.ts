@@ -30,15 +30,35 @@ export type BusinessPlanRequestInput = z.infer<typeof businessPlanRequestSchema>
  * by questionnaire.service.ts). Parsed defensively because it round-trips
  * through a Prisma Json column.
  */
-export const storedQuestionnaireSchema = z.array(
-  z.object({
-    id: z.string().min(1),
-    label: z.string().min(1),
-    type: z.enum(["boolean", "text"]),
-  }),
-);
+export const storedQuestionSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  type: z.enum(["boolean", "text", "select"]),
+  // Only present (and only meaningful) when type === "select" — the closed
+  // set of values validateAnswersAgainstQuestionnaire checks a submitted
+  // answer against.
+  options: z
+    .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
+    .optional(),
+});
 
+export const storedQuestionnaireSchema = z.array(storedQuestionSchema);
+
+export type StoredQuestion = z.infer<typeof storedQuestionSchema>;
 export type StoredQuestionnaire = z.infer<typeof storedQuestionnaireSchema>;
+
+/**
+ * POST /api/business-plans/:id/name-suggestions request body. Both fields
+ * optional — the frontend calls this mid-page-1, before industryCategory/
+ * region are necessarily filled in, so the endpoint degrades gracefully to
+ * suggestions grounded only in the plan's stored businessIdea.
+ */
+export const nameSuggestionsRequestSchema = z.object({
+  industryCategory: z.string().min(1).optional(),
+  region: z.string().min(1).optional(),
+});
+
+export type NameSuggestionsRequestInput = z.infer<typeof nameSuggestionsRequestSchema>;
 
 /**
  * The generated plan content, validated after the OpenAI call before it is

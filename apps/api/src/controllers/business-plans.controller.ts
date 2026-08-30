@@ -2,14 +2,14 @@ import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma"; // ⚠️ confirm named export is `prisma`
 import { buildPlanPdf } from "../services/export-pdf.service";
 import { buildPlanDocx } from "../services/export-docx.service";
-import { samplePlanContent } from "../fixtures/sample-plan-content";
 import type { PlanContent } from "types";
 import { z } from "zod";
-import { businessPlanRequestSchema } from "../validation/business-plan.schema.js";
+import { businessPlanRequestSchema, nameSuggestionsRequestSchema } from "../validation/business-plan.schema.js";
 import {
   getBusinessPlanStatus,
   submitAnswersAndStartGeneration,
 } from "../services/plan-generation.service.js";
+import { suggestBusinessNames } from "../services/name-suggestions.service.js";
 import { NotFoundError, ValidationError } from "../errors/app-error.js";
 
 /**
@@ -68,12 +68,11 @@ export async function getBusinessPlan(
 
 /**
  * GET /api/business-plans/:id/export/pdf
- *
- * TEMPORARY fallback: BE-C3 (real plan generation) isn't implemented yet,
- * so a completed plan without stored content falls back to
- * samplePlanContent. Real content always wins when present. Once BE-C3
- * lands, every completed plan will have real content and this fallback
- * becomes dead code — safe to delete along with the fixture file.
+ * Requires the plan to be completed AND to have real stored content —
+ * a completed plan without content is a data-integrity bug (generation
+ * always writes content before marking a plan "completed"; see
+ * plan-generation.service.ts), so it's surfaced as a 500 rather than
+ * silently served as fabricated sample content.
  */
 export async function exportBusinessPlanPdf(req: Request, res: Response): Promise<void> {
   const id = String(req.params.id);
@@ -94,7 +93,12 @@ export async function exportBusinessPlanPdf(req: Request, res: Response): Promis
       return;
     }
 
-    const content = (plan.content as PlanContent | null) ?? samplePlanContent;
+    if (plan.content === null) {
+      res.status(500).json({ error: "Plan is marked completed but has no stored content" });
+      return;
+    }
+
+    const content = plan.content as unknown as PlanContent;
     const doc = buildPlanPdf(content);
 
     res.setHeader("Content-Type", "application/pdf");
@@ -108,7 +112,7 @@ export async function exportBusinessPlanPdf(req: Request, res: Response): Promis
 
 /**
  * GET /api/business-plans/:id/export/docx
- * Same TEMPORARY fallback pattern as the PDF export above.
+ * Same real-content-required behavior as the PDF export above.
  */
 export async function exportBusinessPlanDocx(req: Request, res: Response): Promise<void> {
   const id = String(req.params.id);
@@ -129,7 +133,12 @@ export async function exportBusinessPlanDocx(req: Request, res: Response): Promi
       return;
     }
 
-    const content = (plan.content as PlanContent | null) ?? samplePlanContent;
+    if (plan.content === null) {
+      res.status(500).json({ error: "Plan is marked completed but has no stored content" });
+      return;
+    }
+
+    const content = plan.content as unknown as PlanContent;
     const buffer = await buildPlanDocx(content);
 
     res.setHeader(
@@ -143,5 +152,42 @@ export async function exportBusinessPlanDocx(req: Request, res: Response): Promi
     console.error("DOCX export failed:", error);
     res.status(500).json({ error: "Failed to generate DOCX" });
   }
+}
 
+const nameSuggestionsPlanIdParamSchema = z.string().uuid();
+
+/**
+ * POST /api/business-plans/:id/name-suggestions
+ * Generates 3 candidate business names from the plan's stored businessIdea
+ * plus whatever industryCategory/region the founder has already picked on
+ * page 1 (both optional in the body — this can be called before either is
+ * answered). A non-UUID id maps to 404, matching the GET endpoint above.
+ */
+export async function postNameSuggestions(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const idResult = nameSuggestionsPlanIdParamSchema.safeParse(req.params["id"]);
+  if (!idResult.success) {
+    next(new NotFoundError("Plan not found"));
+    return;
+  }
+
+  const parseResult = nameSuggestionsRequestSchema.safeParse(req.body ?? {});
+  if (!parseResult.success) {
+    next(new ValidationError(parseResult.error.issues.map((i) => i.message).join("; ")));
+    return;
+  }
+
+  try {
+    const result = await suggestBusinessNames(
+      idResult.data,
+      parseResult.data.industryCategory,
+      parseResult.data.region,
+    );
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
 }

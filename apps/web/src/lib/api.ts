@@ -4,7 +4,10 @@ import type {
   PostBusinessPlanRequest,
   PostBusinessPlanResponse,
   GetBusinessPlanResponse,
+  PostNameSuggestionsRequest,
+  PostNameSuggestionsResponse,
 } from "types";
+import { FIXED_QUESTION_IDS } from "types";
 
 /**
  * Base URL for the backend API (see docs/API.md). Configured via
@@ -33,11 +36,57 @@ function mockPostQuestionnaire(): Promise<PostQuestionnaireResponse> {
     setTimeout(() => {
       resolve({
         planId: "00000000-0000-4000-8000-000000000000",
-        questions: [
-          { id: "q1", label: "Do you already have a registered business name?", type: "boolean" },
-          { id: "q2", label: "What city or state will you primarily operate in?", type: "text" },
-          { id: "q3", label: "What is your estimated starting budget in Naira?", type: "text" },
-          { id: "q4", label: "Will you sell online, in person, or both?", type: "text" },
+        pages: [
+          {
+            page: 1,
+            title: "Business Basics",
+            questions: [
+              { id: FIXED_QUESTION_IDS.hasName, label: "Does your business already have a name?", type: "boolean" },
+              { id: FIXED_QUESTION_IDS.name, label: "What's your business name?", type: "text" },
+              {
+                id: FIXED_QUESTION_IDS.industryCategory,
+                label: "Which category best fits your business?",
+                type: "select",
+                options: [
+                  { value: "food", label: "Food & Beverage" },
+                  { value: "retail", label: "Retail & Trading" },
+                  { value: "beauty", label: "Beauty, Salon & Personal Care" },
+                ],
+              },
+              {
+                id: FIXED_QUESTION_IDS.state,
+                label: "Which Nigerian state will you primarily operate in?",
+                type: "select",
+                options: [
+                  { value: "plateau", label: "Plateau" },
+                  { value: "lagos", label: "Lagos" },
+                  { value: "fct", label: "FCT (Abuja)" },
+                ],
+              },
+            ],
+          },
+          {
+            page: 2,
+            title: "Operations & Funding",
+            questions: [
+              { id: "p2q1", label: "What is your estimated starting budget in Naira?", type: "text" },
+              { id: "p2q2", label: "Will you sell online, in person, or both?", type: "text" },
+              { id: "p2q3", label: "Do you already have a physical location?", type: "boolean" },
+              { id: "p2q4", label: "Will you hire staff in the first 6 months?", type: "boolean" },
+              { id: "p2q5", label: "Who are your main suppliers, if known?", type: "text" },
+            ],
+          },
+          {
+            page: 3,
+            title: "Goals & Risk",
+            questions: [
+              { id: "p3q1", label: "What is your growth goal for year one?", type: "text" },
+              { id: "p3q2", label: "Who do you see as your biggest competitor?", type: "text" },
+              { id: "p3q3", label: "What's your target launch timeline?", type: "text" },
+              { id: "p3q4", label: "Are you aware of any licenses you'll need?", type: "boolean" },
+              { id: "p3q5", label: "What's your biggest concern about starting this business?", type: "text" },
+            ],
+          },
         ],
       });
     }, MOCK_LATENCY_MS);
@@ -50,6 +99,14 @@ function mockSubmitBusinessPlan(
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({ planId, status: "processing" });
+    }, MOCK_LATENCY_MS);
+  });
+}
+
+function mockSuggestBusinessNames(): Promise<PostNameSuggestionsResponse> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ suggestions: ["Zenith Cuts", "Northline Barbers", "Fresh Fade Studio"] });
     }, MOCK_LATENCY_MS);
   });
 }
@@ -184,6 +241,37 @@ export async function submitBusinessPlan(
       body: JSON.stringify(body),
     },
     "Failed to submit business plan.",
+  );
+}
+
+/**
+ * POST /api/business-plans/:id/name-suggestions — generate 3 candidate
+ * business names from the plan's stored idea plus whatever industryCategory/
+ * region have been picked so far. Called mid-page-1, before the rest of the
+ * questionnaire is submitted. See docs/API.md.
+ *
+ * Possible failures surfaced to the caller (all as ApiError):
+ *   404 — plan not found
+ *   429 — rate limited
+ *   500 — upstream AI failure
+ *   0   — network/fetch failure (request never reached the server)
+ */
+export async function suggestBusinessNames(
+  planId: string,
+  body: PostNameSuggestionsRequest,
+): Promise<PostNameSuggestionsResponse> {
+  if (USE_MOCK_API) {
+    return mockSuggestBusinessNames();
+  }
+
+  return requestJson<PostNameSuggestionsResponse>(
+    `${API_BASE_URL}/business-plans/${encodeURIComponent(planId)}/name-suggestions`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    "Failed to generate name suggestions.",
   );
 }
 
