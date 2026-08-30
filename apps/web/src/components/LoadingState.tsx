@@ -8,16 +8,46 @@ interface Props {
 }
 
 /**
+ * Short status messages cycled while the plan generates, each naming a real
+ * step of plan-generation.service.ts's pipeline (RAG retrieval, then the
+ * PlanContent sections in roughly the order the model writes them) rather
+ * than generic "loading…" text.
+ */
+const STATUS_MESSAGES = [
+  "Reading your business idea",
+  "Checking Nigerian regulatory requirements",
+  "Researching your market and competitors",
+  "Structuring your executive summary",
+  "Estimating startup and operating costs",
+  "Projecting cash flow and break-even",
+  "Weighing risks and recommendations",
+  "Finalizing your plan",
+] as const;
+
+const MESSAGE_INTERVAL_MS = 3_000;
+
+/**
  * Shown while GET /api/business-plans/:id returns { status: "processing" }.
- * Counts elapsed seconds from mount so the user knows work is happening.
+ * Cycles through STATUS_MESSAGES so the wait feels alive rather than static,
+ * and still counts elapsed seconds from mount so the user knows how long
+ * it's been.
  */
 export default function LoadingState({ planId }: Props) {
   const [elapsed, setElapsed] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed((s) => s + 1), 1_000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    // Stops on the last message ("Finalizing your plan") instead of looping
+    // back to the start — generation is normally done by then anyway.
+    if (messageIndex >= STATUS_MESSAGES.length - 1) return;
+    const timer = setTimeout(() => setMessageIndex((i) => i + 1), MESSAGE_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [messageIndex]);
 
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
@@ -39,13 +69,15 @@ export default function LoadingState({ planId }: Props) {
         className="h-12 w-12 animate-spin rounded-full border-4 border-[#122625] border-t-[#12a8b0] dark:border-[#122625] dark:border-t-[#12a8b0]"
       />
 
-      {/* Heading */}
-      <div className="flex flex-col gap-1">
-        <p className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
-          Generating your business plan…
+      {/* Rotating status message */}
+      <div className="flex min-h-14 flex-col items-center justify-center gap-1">
+        <p
+          key={messageIndex}
+          className="font-display animate-fade-in text-lg font-semibold text-zinc-800 dark:text-zinc-100"
+        >
+          {STATUS_MESSAGES[messageIndex]}…
         </p>
-        <p className="text-sm text-zinc-800 dark:text-zinc-400">
-          We&apos;re researching the Nigerian market and building your plan.
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
           This usually takes 30–60 seconds.
         </p>
       </div>
