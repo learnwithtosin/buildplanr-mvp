@@ -7,12 +7,47 @@
 // Shared primitives
 // ---------------------------------------------------------------------------
 
+/** A single selectable option for a "select" question. */
+export interface QuestionOption {
+  value: string;
+  label: string;
+}
+
 /** A single questionnaire question returned by POST /api/questionnaire. */
 export interface Question {
   id: string;
   label: string;
-  type: "boolean" | "text";
+  type: "boolean" | "text" | "select";
+  /** Present only when type === "select" — the closed set of choices. */
+  options?: QuestionOption[];
 }
+
+/**
+ * A labeled group of questions shown together as one step of the
+ * questionnaire. Page 1 is always the fixed "Business Basics" page
+ * (deterministic, not AI-generated); pages 2+ are AI-generated from the
+ * founder's idea.
+ */
+export interface QuestionnairePage {
+  page: number;
+  title: string;
+  questions: Question[];
+}
+
+/**
+ * Stable ids for the four fixed page-1 questions. Single source of truth
+ * for both sides: apps/api/src/config/fixed-questionnaire.ts (which builds
+ * the actual page-1 Question objects) and apps/web's QuestionnaireForm
+ * (which needs these exact ids to special-case rendering — e.g. showing the
+ * "Suggest names" action next to the business_name field). Never hardcode
+ * these strings anywhere else; import from here.
+ */
+export const FIXED_QUESTION_IDS = {
+  hasName: "business_has_name",
+  name: "business_name",
+  industryCategory: "industry_category",
+  state: "business_state",
+} as const;
 
 /**
  * The generated business plan content, returned once a plan's status is
@@ -34,7 +69,7 @@ export interface PlanContent {
   recommendations: string;
 }
 
-/** A single questionnaire answer: booleans for boolean questions, strings for text questions. */
+/** A single questionnaire answer: booleans for boolean questions, strings for text/select questions. */
 export type AnswerValue = boolean | string;
 
 /** Map of question id -> answer value, covering every question id from the questionnaire. */
@@ -50,7 +85,22 @@ export interface PostQuestionnaireRequest {
 
 export interface PostQuestionnaireResponse {
   planId: string;
-  questions: Question[];
+  pages: QuestionnairePage[];
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/business-plans/:id/name-suggestions
+// ---------------------------------------------------------------------------
+
+export interface PostNameSuggestionsRequest {
+  /** The founder's chosen industry category (page-1 answer), for a more targeted suggestion. */
+  industryCategory?: string;
+  /** The founder's chosen state (page-1 answer), for a more targeted suggestion. */
+  region?: string;
+}
+
+export interface PostNameSuggestionsResponse {
+  suggestions: string[];
 }
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,8 @@ import {
   storedQuestionnaireSchema,
   type StoredQuestionnaire,
 } from "../validation/business-plan.schema.js";
+import { FIXED_PAGE_1_QUESTION_IDS } from "../config/fixed-questionnaire.js";
+import { isValidIndustryCategory, isValidNigerianState } from "../config/nigeria-taxonomy.js";
 
 const PLAN_MODEL = process.env["OPENAI_PLAN_MODEL"] ?? "gpt-4o-2024-08-06";
 
@@ -113,13 +115,50 @@ function validateAnswersAgainstQuestionnaire(
     if (question.type === "boolean" && typeof value !== "boolean") {
       throw new ValidationError(`answer for "${question.id}" must be a boolean`);
     }
-    if (question.type === "text" && typeof value !== "string") {
+    if ((question.type === "text" || question.type === "select") && typeof value !== "string") {
       throw new ValidationError(`answer for "${question.id}" must be a string`);
     }
-    if (question.type === "text" && typeof value === "string" && value.trim().length === 0) {
+    if (
+      (question.type === "text" || question.type === "select") &&
+      typeof value === "string" &&
+      value.trim().length === 0
+    ) {
       throw new ValidationError(`answer for "${question.id}" must not be empty`);
     }
+    if (
+      question.type === "select" &&
+      question.options !== undefined &&
+      !question.options.some((option) => option.value === value)
+    ) {
+      throw new ValidationError(`answer for "${question.id}" is not one of the allowed options`);
+    }
   }
+}
+
+/**
+ * Pulls the industryCategory/region values out of the fixed page-1 answers
+ * (industry_category, business_state), validating each against the shared
+ * taxonomy before it's persisted onto BusinessPlan and used as an exact-
+ * match filter in rag.service.ts. Returns null for either field the
+ * questionnaire didn't include or the answer didn't cover (defensive —
+ * the fixed page is always present in practice, but this function shouldn't
+ * assume it).
+ */
+function extractIndustryCategoryAndRegion(answers: AnswersMap): {
+  industryCategory: string | null;
+  region: string | null;
+} {
+  const categoryValue = answers[FIXED_PAGE_1_QUESTION_IDS.industryCategory];
+  const stateValue = answers[FIXED_PAGE_1_QUESTION_IDS.state];
+
+  const industryCategory =
+    typeof categoryValue === "string" && isValidIndustryCategory(categoryValue)
+      ? categoryValue
+      : null;
+  const region =
+    typeof stateValue === "string" && isValidNigerianState(stateValue) ? stateValue : null;
+
+  return { industryCategory, region };
 }
 
 // ---------------------------------------------------------------------------
@@ -304,8 +343,6 @@ export async function submitAnswersAndStartGeneration(
       status: true,
       businessIdea: true,
       questionnaire: true,
-      industryCategory: true,
-      region: true,
     },
   });
 
@@ -326,6 +363,8 @@ export async function submitAnswersAndStartGeneration(
 
   validateAnswersAgainstQuestionnaire(questionnaire, answers);
 
+  const { industryCategory, region } = extractIndustryCategoryAndRegion(answers);
+
   // Atomic status transition: the `status` condition in the WHERE clause
   // means only one of two racing submissions can win.
   const updated = await prisma.businessPlan.updateMany({
@@ -333,6 +372,11 @@ export async function submitAnswersAndStartGeneration(
     data: {
       answers: JSON.parse(JSON.stringify(answers)),
       status: "processing",
+      // Previously these columns were never written — rag.service.ts's
+      // category/region filters were always dead code. Page 1 of the
+      // questionnaire is now the sole source of truth for both.
+      industryCategory,
+      region,
     },
   });
 
@@ -346,8 +390,8 @@ export async function submitAnswersAndStartGeneration(
     plan.businessIdea,
     questionnaire,
     answers,
-    plan.industryCategory,
-    plan.region,
+    industryCategory,
+    region,
   );
 
   return { planId, status: "processing" };

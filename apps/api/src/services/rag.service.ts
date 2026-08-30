@@ -49,8 +49,8 @@ export async function retrieveRelevantKnowledge(
     SELECT content
     FROM "KnowledgeChunk"
     WHERE
-      (${category}::text IS NULL OR category = ${category})
-      AND (${region}::text IS NULL OR region = ${region})
+      (${category}::text IS NULL OR category IS NULL OR category = ${category})
+      AND (${region}::text IS NULL OR region IS NULL OR region = ${region})
     ORDER BY embedding <=> ${vectorLiteral}::vector
     LIMIT ${TOP_K}
   `;
