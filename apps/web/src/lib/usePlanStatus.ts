@@ -21,8 +21,8 @@ export interface UsePlanStatusResult {
  * status is "completed" or "failed".
  *
  * refetchInterval returns false once the plan is done, stopping the poll.
- * The returned `data` object is ready for PlanView to consume once
- * `data.status === "completed"`.
+ * The returned `data` object is ready for the completed-plan page to
+ * render once `data.status === "completed"`.
  */
 export function usePlanStatus(planId: string): UsePlanStatusResult {
   const { data, isLoading, error } = useQuery<GetBusinessPlanResponse, Error>({

@@ -1,6 +1,20 @@
 import { z } from "zod";
 
 /**
+ * Map of question id -> answer value (boolean for boolean questions, string
+ * for text/select questions). Shared by every endpoint that accepts a page
+ * (or the full set) of questionnaire answers — POST /api/business-plans and
+ * POST /api/business-plans/:id/next-page both use this same shape.
+ */
+export const answersMapSchema = z.record(
+  z.string(),
+  z.union([z.boolean(), z.string()], {
+    error: "each answer must be a boolean or a string",
+  }),
+  { error: "answers is required and must be an object of question id -> answer" },
+);
+
+/**
  * POST /api/business-plans request body.
  * docs/API.md: "planId required, must reference an existing plan with status
  * awaiting_answers. answers required, must cover every question id from the
@@ -14,13 +28,7 @@ export const businessPlanRequestSchema = z.object({
   planId: z
     .string({ error: "planId is required and must be a string" })
     .uuid("planId must be a valid UUID"),
-  answers: z.record(
-    z.string(),
-    z.union([z.boolean(), z.string()], {
-      error: "each answer must be a boolean or a string",
-    }),
-    { error: "answers is required and must be an object of question id -> answer" },
-  ),
+  answers: answersMapSchema,
 });
 
 export type BusinessPlanRequestInput = z.infer<typeof businessPlanRequestSchema>;

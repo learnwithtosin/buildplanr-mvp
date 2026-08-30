@@ -22,12 +22,12 @@ import InlineError from "@/components/InlineError";
 
 interface StoredQuestionnaire {
   planId: string;
-  pages: QuestionnairePage[];
+  page: QuestionnairePage;
 }
 
 type PageState =
   | { status: "loading" }
-  | { status: "ready"; planId: string; pages: QuestionnairePage[] }
+  | { status: "ready"; planId: string; page: QuestionnairePage }
   | { status: "error"; message: string };
 
 const SESSION_KEY_PREFIX = "questionnaire:";
@@ -57,11 +57,7 @@ export default function QuestionnairePage() {
 
       const parsed: StoredQuestionnaire = JSON.parse(raw);
 
-      if (
-        !parsed.planId ||
-        !Array.isArray(parsed.pages) ||
-        parsed.pages.length === 0
-      ) {
+      if (!parsed.planId || !parsed.page) {
         setState({
           status: "error",
           message: "Questionnaire data is invalid. Please start over.",
@@ -69,7 +65,7 @@ export default function QuestionnairePage() {
         return;
       }
 
-      setState({ status: "ready", planId: parsed.planId, pages: parsed.pages });
+      setState({ status: "ready", planId: parsed.planId, page: parsed.page });
     } catch {
       setState({
         status: "error",
@@ -126,7 +122,7 @@ export default function QuestionnairePage() {
 
             <QuestionnaireForm
               planId={state.planId}
-              pages={state.pages}
+              initialPage={state.page}
               onSuccess={handleSuccess}
             />
           </>

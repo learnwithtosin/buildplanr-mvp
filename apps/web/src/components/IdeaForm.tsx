@@ -67,7 +67,7 @@ export default function IdeaForm() {
         `questionnaire:${response.planId}`,
         JSON.stringify({
           planId: response.planId,
-          pages: response.pages,
+          page: response.page,
         }),
       );
 

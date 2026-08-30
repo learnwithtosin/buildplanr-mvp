@@ -6,10 +6,10 @@
  * Polls GET /api/business-plans/:id via usePlanStatus until the plan
  * is completed or failed, showing LoadingState in the meantime.
  *
- * Once completed, PlanView renders the full generated content as the
- * primary, real preview. DocumentPreviewCard is used only for the two
- * export tiles below it, and now shows a genuine excerpt pulled from
- * the completed plan rather than placeholder content.
+ * Once completed: a left column shows only the executive summary (clamped,
+ * with a "View more" toggle), and the right two-thirds shows the PDF/Word
+ * download cards side by side. The full section-by-section plan is no
+ * longer shown on this page — it lives in the downloaded documents.
  */
 
 import DocumentPreviewCard from "@/components/DocumentPreviewCard";
@@ -20,7 +20,7 @@ import LoadingState from "@/components/LoadingState";
 import DownloadPdfButton from "@/components/DownloadPdfButton";
 import DownloadDocxButton from "@/components/DownloadDocxButton";
 import InlineError from "@/components/InlineError";
-import PlanView from "@/components/PlanView";
+import ExecutiveSummaryPreview from "@/components/ExecutiveSummaryPreview";
 import { usePlanStatus } from "@/lib/usePlanStatus";
 
 export default function PlanPage() {
@@ -35,7 +35,7 @@ export default function PlanPage() {
     <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <AppHeader />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-12">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-12">
         {/* ── Loading / processing ────────────────────────── */}
         {isProcessing && <LoadingState planId={planId} />}
 
@@ -69,38 +69,38 @@ export default function PlanPage() {
 
         {/* ── Completed ───────────────────────────────────────────── */}
         {isDone && data?.status === "completed" && (
-          <div className="flex w-full flex-col gap-4">
-            {/* Real preview: the full generated plan, not a placeholder */}
-            <PlanView content={data.content} />
-
+          <div className="flex w-full flex-col gap-8 pb-12">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-zinc-900">
-                Export your plan
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                Download the same content you just read above.
-              </p>
-              <p className="mt-3 text-xs text-zinc-400">Plan ID: {planId}</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+                Your business plan is ready
+              </h1>
+              <p className="mt-1 text-sm text-zinc-500">Plan ID: {planId}</p>
             </div>
 
-            <div className="grid gap-8 pb-12 md:grid-cols-2">
-              <DocumentPreviewCard
-                type="pdf"
-                title="PDF Version"
-                description="Perfect for printing and sharing."
-                excerpt={data.content.executiveSummary}
-                sectionCount={Object.keys(data.content).length}
-                action={<DownloadPdfButton planId={planId} />}
-              />
+            <div className="grid w-full gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-1">
+                <ExecutiveSummaryPreview text={data.content.executiveSummary} />
+              </div>
 
-              <DocumentPreviewCard
-                type="docx"
-                title="Word Document"
-                description="Editable Microsoft Word format."
-                excerpt={data.content.executiveSummary}
-                sectionCount={Object.keys(data.content).length}
-                action={<DownloadDocxButton planId={planId} />}
-              />
+              <div className="grid gap-8 sm:grid-cols-2 lg:col-span-2">
+                <DocumentPreviewCard
+                  type="pdf"
+                  title="PDF Version"
+                  description="Perfect for printing and sharing."
+                  excerpt={data.content.executiveSummary}
+                  sectionCount={Object.keys(data.content).length}
+                  action={<DownloadPdfButton planId={planId} />}
+                />
+
+                <DocumentPreviewCard
+                  type="docx"
+                  title="Word Document"
+                  description="Editable Microsoft Word format."
+                  excerpt={data.content.executiveSummary}
+                  sectionCount={Object.keys(data.content).length}
+                  action={<DownloadDocxButton planId={planId} />}
+                />
+              </div>
             </div>
           </div>
         )}

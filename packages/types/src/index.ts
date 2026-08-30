@@ -85,7 +85,24 @@ export interface PostQuestionnaireRequest {
 
 export interface PostQuestionnaireResponse {
   planId: string;
-  pages: QuestionnairePage[];
+  /** Only the fixed page 1 — pages 2-3 are generated one at a time via POST /api/business-plans/:id/next-page, once the prior page's answers are known. */
+  page: QuestionnairePage;
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/business-plans/:id/next-page
+// ---------------------------------------------------------------------------
+
+export interface PostNextPageRequest {
+  /** Answers for the page the founder just completed — that page's question ids only. */
+  answers: AnswersMap;
+}
+
+export interface PostNextPageResponse {
+  /** The next AI-generated questionnaire page, grounded in every answer given so far. */
+  page: QuestionnairePage;
+  /** True once this is the last page — the founder should submit via POST /api/business-plans next, not call this endpoint again. */
+  isLastPage: boolean;
 }
 
 // ---------------------------------------------------------------------------

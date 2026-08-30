@@ -1,6 +1,8 @@
 import type {
   PostQuestionnaireRequest,
   PostQuestionnaireResponse,
+  PostNextPageRequest,
+  PostNextPageResponse,
   PostBusinessPlanRequest,
   PostBusinessPlanResponse,
   GetBusinessPlanResponse,
@@ -36,58 +38,88 @@ function mockPostQuestionnaire(): Promise<PostQuestionnaireResponse> {
     setTimeout(() => {
       resolve({
         planId: "00000000-0000-4000-8000-000000000000",
-        pages: [
-          {
-            page: 1,
-            title: "Business Basics",
-            questions: [
-              { id: FIXED_QUESTION_IDS.hasName, label: "Does your business already have a name?", type: "boolean" },
-              { id: FIXED_QUESTION_IDS.name, label: "What's your business name?", type: "text" },
-              {
-                id: FIXED_QUESTION_IDS.industryCategory,
-                label: "Which category best fits your business?",
-                type: "select",
-                options: [
-                  { value: "food", label: "Food & Beverage" },
-                  { value: "retail", label: "Retail & Trading" },
-                  { value: "beauty", label: "Beauty, Salon & Personal Care" },
-                ],
-              },
-              {
-                id: FIXED_QUESTION_IDS.state,
-                label: "Which Nigerian state will you primarily operate in?",
-                type: "select",
-                options: [
-                  { value: "plateau", label: "Plateau" },
-                  { value: "lagos", label: "Lagos" },
-                  { value: "fct", label: "FCT (Abuja)" },
-                ],
-              },
-            ],
-          },
-          {
+        page: {
+          page: 1,
+          title: "Business Basics",
+          questions: [
+            {
+              id: FIXED_QUESTION_IDS.industryCategory,
+              label: "Which category best fits your business?",
+              type: "select",
+              options: [
+                { value: "food", label: "Food & Beverage" },
+                { value: "retail", label: "Retail & Trading" },
+                { value: "beauty", label: "Beauty, Salon & Personal Care" },
+              ],
+            },
+            {
+              id: FIXED_QUESTION_IDS.state,
+              label: "Which Nigerian state will you primarily operate in?",
+              type: "select",
+              options: [
+                { value: "plateau", label: "Plateau" },
+                { value: "lagos", label: "Lagos" },
+                { value: "fct", label: "FCT (Abuja)" },
+              ],
+            },
+            { id: FIXED_QUESTION_IDS.hasName, label: "Does your business already have a name?", type: "boolean" },
+            { id: FIXED_QUESTION_IDS.name, label: "What's your business name?", type: "text" },
+          ],
+        },
+      });
+    }, MOCK_LATENCY_MS);
+  });
+}
+
+/** Tracks which mock page to return next — reset once a questionnaire's mock run completes. */
+let mockNextPageCallCount = 0;
+
+function mockFetchNextQuestionnairePage(): Promise<PostNextPageResponse> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      mockNextPageCallCount += 1;
+
+      if (mockNextPageCallCount === 1) {
+        resolve({
+          page: {
             page: 2,
             title: "Operations & Funding",
             questions: [
               { id: "p2q1", label: "What is your estimated starting budget in Naira?", type: "text" },
-              { id: "p2q2", label: "Will you sell online, in person, or both?", type: "text" },
+              {
+                id: "p2q2",
+                label: "Will you sell online, in person, or both?",
+                type: "select",
+                options: [
+                  { value: "online", label: "Online-only" },
+                  { value: "in_person", label: "In person" },
+                  { value: "both", label: "Both" },
+                ],
+              },
               { id: "p2q3", label: "Do you already have a physical location?", type: "boolean" },
               { id: "p2q4", label: "Will you hire staff in the first 6 months?", type: "boolean" },
               { id: "p2q5", label: "Who are your main suppliers, if known?", type: "text" },
             ],
           },
-          {
-            page: 3,
-            title: "Goals & Risk",
-            questions: [
-              { id: "p3q1", label: "What is your growth goal for year one?", type: "text" },
-              { id: "p3q2", label: "Who do you see as your biggest competitor?", type: "text" },
-              { id: "p3q3", label: "What's your target launch timeline?", type: "text" },
-              { id: "p3q4", label: "Are you aware of any licenses you'll need?", type: "boolean" },
-              { id: "p3q5", label: "What's your biggest concern about starting this business?", type: "text" },
-            ],
-          },
-        ],
+          isLastPage: false,
+        });
+        return;
+      }
+
+      mockNextPageCallCount = 0;
+      resolve({
+        page: {
+          page: 3,
+          title: "Goals & Risk",
+          questions: [
+            { id: "p3q1", label: "What is your growth goal for year one?", type: "text" },
+            { id: "p3q2", label: "Who do you see as your biggest competitor?", type: "text" },
+            { id: "p3q3", label: "What's your target launch timeline?", type: "text" },
+            { id: "p3q4", label: "Are you aware of any licenses you'll need?", type: "boolean" },
+            { id: "p3q5", label: "What's your biggest concern about starting this business?", type: "text" },
+          ],
+        },
+        isLastPage: true,
       });
     }, MOCK_LATENCY_MS);
   });
@@ -212,6 +244,39 @@ export async function postQuestionnaire(
       body: JSON.stringify(body),
     },
     "Failed to generate questionnaire.",
+  );
+}
+
+/**
+ * POST /api/business-plans/:id/next-page — submit the answers for the page
+ * the founder just completed and get back the next AI-generated page,
+ * grounded in the business idea plus every answer given so far. Called
+ * between pages instead of generating the whole questionnaire upfront.
+ *
+ * Possible failures surfaced to the caller (all as ApiError):
+ *   400 — missing/invalid answers for the currently-pending page
+ *   404 — plan not found
+ *   409 — plan already fully answered or already processed
+ *   429 — rate limited
+ *   500 — upstream AI failure
+ *   0   — network/fetch failure (request never reached the server)
+ */
+export async function fetchNextQuestionnairePage(
+  planId: string,
+  body: PostNextPageRequest,
+): Promise<PostNextPageResponse> {
+  if (USE_MOCK_API) {
+    return mockFetchNextQuestionnairePage();
+  }
+
+  return requestJson<PostNextPageResponse>(
+    `${API_BASE_URL}/business-plans/${encodeURIComponent(planId)}/next-page`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    "Failed to generate the next page.",
   );
 }
 

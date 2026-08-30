@@ -33,10 +33,13 @@ function buildPrompt(businessIdea: string, industryCategory?: string, region?: s
 
   return [
     "Suggest exactly 3 short, memorable business names for the Nigerian",
-    "founder's idea below. Names should sound natural in the Nigerian",
-    "market, be easy to say and spell, and avoid names that are obviously",
-    "already major existing brands. Return names only, no taglines or",
-    "explanations.",
+    "founder's idea below. Every name must be clearly grounded in what",
+    "this specific business actually does — draw on concrete details from",
+    "the idea (and category, if given) rather than generic \"startup-y\"",
+    "words untethered from the business. Names should sound natural in the",
+    "Nigerian market, be easy to say and spell, and avoid names that are",
+    "obviously already major existing brands. Return names only, no",
+    "taglines or explanations.",
     "",
     `Business idea: "${businessIdea}"`,
     ...(categoryLine !== undefined ? [categoryLine] : []),
