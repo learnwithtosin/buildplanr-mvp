@@ -35,7 +35,7 @@ export default function PlanPage() {
     <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <AppHeader />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-12">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 pb-12 pt-28">
         {/* ── Loading / processing ────────────────────────── */}
         {isProcessing && <LoadingState planId={planId} />}
 
