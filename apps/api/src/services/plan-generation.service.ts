@@ -94,7 +94,7 @@ function isFailedContent(value: unknown): value is FailedContent {
  * question -> string), and contains no unknown ids. Throws ValidationError
  * (400) on any mismatch, per docs/API.md.
  */
-function validateAnswersAgainstQuestionnaire(
+export function validateAnswersAgainstQuestionnaire(
   questionnaire: StoredQuestionnaire,
   answers: AnswersMap,
 ): void {
@@ -144,7 +144,7 @@ function validateAnswersAgainstQuestionnaire(
  * the fixed page is always present in practice, but this function shouldn't
  * assume it).
  */
-function extractIndustryCategoryAndRegion(answers: AnswersMap): {
+export function extractIndustryCategoryAndRegion(answers: AnswersMap): {
   industryCategory: string | null;
   region: string | null;
 } {
@@ -165,7 +165,7 @@ function extractIndustryCategoryAndRegion(answers: AnswersMap): {
 // Prompt assembly
 // ---------------------------------------------------------------------------
 
-function formatAnswersForPrompt(
+export function formatAnswersForPrompt(
   questionnaire: StoredQuestionnaire,
   answers: AnswersMap,
 ): string {

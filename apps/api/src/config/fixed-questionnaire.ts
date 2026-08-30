@@ -19,18 +19,10 @@ import { INDUSTRY_CATEGORIES, NIGERIAN_STATES } from "./nigeria-taxonomy.js";
 export const FIXED_PAGE_1_QUESTION_IDS = FIXED_QUESTION_IDS;
 
 export function buildFixedPage1(): QuestionnairePage {
+  // industry_category and business_state come first so the name-suggestion
+  // flow (business_name, below) has real context — a category and state —
+  // by the time the founder can actually use it.
   const questions: Question[] = [
-    {
-      id: FIXED_PAGE_1_QUESTION_IDS.hasName,
-      label: "Does your business already have a name?",
-      type: "boolean",
-    },
-    {
-      id: FIXED_PAGE_1_QUESTION_IDS.name,
-      label:
-        "What's your business name? (No name yet? Use the \"Suggest names\" option.)",
-      type: "text",
-    },
     {
       id: FIXED_PAGE_1_QUESTION_IDS.industryCategory,
       label: "Which category best fits your business?",
@@ -42,6 +34,17 @@ export function buildFixedPage1(): QuestionnairePage {
       label: "Which Nigerian state will you primarily operate in?",
       type: "select",
       options: NIGERIAN_STATES.map((s) => ({ value: s.value, label: s.label })),
+    },
+    {
+      id: FIXED_PAGE_1_QUESTION_IDS.hasName,
+      label: "Does your business already have a name?",
+      type: "boolean",
+    },
+    {
+      id: FIXED_PAGE_1_QUESTION_IDS.name,
+      label:
+        "What's your business name? (No name yet? Use the \"Suggest names\" option.)",
+      type: "text",
     },
   ];
 

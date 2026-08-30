@@ -5,11 +5,13 @@ import { buildPlanDocx } from "../services/export-docx.service";
 import type { PlanContent } from "types";
 import { z } from "zod";
 import { businessPlanRequestSchema, nameSuggestionsRequestSchema } from "../validation/business-plan.schema.js";
+import { nextPageRequestSchema } from "../validation/questionnaire.schema.js";
 import {
   getBusinessPlanStatus,
   submitAnswersAndStartGeneration,
 } from "../services/plan-generation.service.js";
 import { suggestBusinessNames } from "../services/name-suggestions.service.js";
+import { generateNextPage } from "../services/questionnaire.service.js";
 import { NotFoundError, ValidationError } from "../errors/app-error.js";
 
 /**
@@ -186,6 +188,40 @@ export async function postNameSuggestions(
       parseResult.data.industryCategory,
       parseResult.data.region,
     );
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+const nextPagePlanIdParamSchema = z.string().uuid();
+
+/**
+ * POST /api/business-plans/:id/next-page
+ * Validates and persists the answers for the currently-pending
+ * questionnaire page, then generates and returns the next page — grounded
+ * in the business idea plus every answer given so far. See
+ * questionnaire.service.ts's generateNextPage for the full contract.
+ */
+export async function postNextPage(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const idResult = nextPagePlanIdParamSchema.safeParse(req.params["id"]);
+  if (!idResult.success) {
+    next(new NotFoundError("Plan not found"));
+    return;
+  }
+
+  const parseResult = nextPageRequestSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    next(new ValidationError(parseResult.error.issues.map((i) => i.message).join("; ")));
+    return;
+  }
+
+  try {
+    const result = await generateNextPage(idResult.data, parseResult.data.answers);
     res.status(200).json(result);
   } catch (error) {
     next(error);
