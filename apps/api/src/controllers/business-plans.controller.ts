@@ -98,7 +98,7 @@ export async function exportBusinessPlanPdf(req: Request, res: Response): Promis
       return;
     }
 
-    const content = plan.content as PlanContent;
+    const content = plan.content as unknown as PlanContent;
     const doc = buildPlanPdf(content);
 
     res.setHeader("Content-Type", "application/pdf");
@@ -138,7 +138,7 @@ export async function exportBusinessPlanDocx(req: Request, res: Response): Promi
       return;
     }
 
-    const content = plan.content as PlanContent;
+    const content = plan.content as unknown as PlanContent;
     const buffer = await buildPlanDocx(content);
 
     res.setHeader(
