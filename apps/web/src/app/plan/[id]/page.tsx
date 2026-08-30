@@ -35,7 +35,7 @@ export default function PlanPage() {
     <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <AppHeader />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-12">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 pb-12 pt-28">
         {/* ── Loading / processing ────────────────────────── */}
         {isProcessing && <LoadingState planId={planId} />}
 
@@ -71,7 +71,7 @@ export default function PlanPage() {
         {isDone && data?.status === "completed" && (
           <div className="flex w-full flex-col gap-8 pb-12">
             <div className="text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+              <h1 className="font-display text-2xl font-semibold tracking-tight text-zinc-950">
                 Your business plan is ready
               </h1>
               <p className="mt-1 text-sm text-zinc-500">Plan ID: {planId}</p>

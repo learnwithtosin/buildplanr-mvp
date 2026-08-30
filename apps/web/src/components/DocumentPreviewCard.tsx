@@ -57,7 +57,7 @@ export default function DocumentPreviewCard({
           </div>
 
           <div>
-            <h3 className="font-semibold text-zinc-900">{title}</h3>
+            <h3 className="font-display font-semibold text-zinc-900">{title}</h3>
 
             <p className="text-sm text-zinc-500">
               {description}

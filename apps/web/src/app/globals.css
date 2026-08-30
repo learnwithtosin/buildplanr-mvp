@@ -1,40 +1,21 @@
 @import "tailwindcss";
 
+/* Distinct heading typeface, separate from the body sans (--font-geist-sans). */
+.font-display {
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+}
 
-@keyframes bubble-float {
-  0% {
-    transform: translateY(0) translateX(0) scale(1);
+@keyframes fade-in {
+  from {
     opacity: 0;
+    transform: translateY(2px);
   }
-  12% {
-    opacity: var(--bubble-opacity, 0.5);
-  }
-  88% {
-    opacity: var(--bubble-opacity, 0.5);
-  }
-  100% {
-    transform: translateY(-160px) translateX(var(--bubble-drift, 12px)) scale(1.05);
-    opacity: 0;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.bubble {
-  position: absolute;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, rgba(22, 191, 204, 0.9), rgba(22, 191, 204, 0.15) 70%);
-  filter: blur(1px);
-  animation-name: bubble-float;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-
-.dark .bubble {
-  background: radial-gradient(circle at 35% 30%, rgba(22, 191, 204, 0.9), rgba(22, 191, 204, 0.04) 70%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bubble {
-    animation: none;
-    opacity: 0;
-  }
+.animate-fade-in {
+  animation: fade-in 0.35s ease-out;
 }
