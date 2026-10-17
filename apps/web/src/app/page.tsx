@@ -1,127 +1,186 @@
+import Link from "next/link";
+import { ArrowUp, Landmark, Receipt, Banknote } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
+import AppFooter from "@/components/AppFooter";
 import IdeaForm from "@/components/IdeaForm";
-import { FileText, ListChecks, Sparkles } from "lucide-react";
+import LivePlanDoc from "@/components/LivePlanDoc";
+import FlipCard from "@/components/FlipCard";
+import { PLAN_SECTIONS } from "@/lib/planSections";
+import { IdeaIllustration, QuestionsIllustration, PlanIllustration } from "@/components/Illustrations";
 
 /**
- * The actual 3-step flow (idea -> questionnaire -> generated plan), shown
- * on the landing page so founders know what to expect before they start.
+ * The real 3-step flow (idea -> questionnaire -> generated plan). Each card
+ * flips over to show what happens at that step.
  */
 const STEPS = [
   {
-    icon: Sparkles,
-    title: "Describe your idea",
-    description: "Tell us what you want to build, in your own words — one paragraph is enough.",
+    title: "Describe your idea.",
+    description: "One paragraph in your own words is enough. Rough is fine; we ask for the details next.",
+    illustration: <IdeaIllustration />,
+    backTitle: "What to write",
+    backPoints: [
+      "What you want to sell, and to whom",
+      "Where you plan to operate, even just a town",
+      "Anything you've already started",
+    ],
   },
   {
-    icon: ListChecks,
-    title: "Answer a few questions",
-    description: "We ask a handful of questions tailored to your specific idea, one page at a time.",
+    title: "Answer a few questions.",
+    description: "They're written for your idea and arrive one page at a time, so each page builds on the last.",
+    illustration: <QuestionsIllustration />,
+    backTitle: "What we ask",
+    backPoints: [
+      "Your business name, or ideas for one",
+      "Your category and state",
+      "Whether you're registered with the CAC",
+    ],
   },
   {
-    icon: FileText,
-    title: "Download your plan",
-    description: "Get a full business plan grounded in Nigerian market and regulatory context, as PDF or Word.",
+    title: "Download your plan.",
+    description: "A full business plan grounded in Nigerian market and regulatory context.",
+    illustration: <PlanIllustration />,
+    backTitle: "What you get",
+    backPoints: [
+      "13 sections, from summary to risks",
+      "Startup costs, cash flow and break-even",
+      "A print-ready PDF and an editable Word file",
+    ],
+  },
+] as const;
+
+
+const NIGERIA_NOTES = [
+  {
+    icon: Landmark,
+    title: "Registration, spelled out",
+    body: "What registering with the CAC involves for your kind of business, before you spend a naira.",
+  },
+  {
+    icon: Receipt,
+    title: "Tax and permits",
+    body: "FIRS obligations, plus agency approvals such as NAFDAC or SON where they apply to you.",
+  },
+  {
+    icon: Banknote,
+    title: "Numbers in naira",
+    body: "Startup and running costs, cash flow and break-even, framed for the local market.",
   },
 ] as const;
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col">
       <AppHeader />
 
-      <main className="flex flex-1 flex-col items-center px-6 pb-24 pt-32">
-        <div className="grid w-full max-w-5xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* ── Hero copy + form ─────────────────────────────── */}
-          <div className="flex flex-col items-center gap-8 text-center lg:items-start lg:text-left">
-            <div className="flex flex-col items-center gap-4 lg:items-start">
-              <span className="inline-flex items-center rounded-full border border-[#bfecef] bg-white px-5 py-2 shadow-sm">
-                <span className="text-base">🇳🇬</span>
-                <span className="ml-2 text-sm font-semibold italic tracking-wide text-[#129ba4]">
-                  Made for Nigerian founders
-                </span>
-              </span>
+      <main className="flex flex-1 flex-col items-center">
+        {/* ── Hero ───────────────────────────────────────────── */}
+        <section id="start" className="w-full scroll-mt-4 px-6 pb-20 pt-32 lg:pb-28">
+          <div className="mx-auto grid max-w-5xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+            <div className="flex flex-col gap-7">
+              <div className="flex flex-col gap-4">
+                <h1 className="font-display text-4xl font-bold leading-[1.08] tracking-tight text-deep sm:text-5xl">
+                  Your business idea, written up as a real plan.
+                </h1>
+                <p className="max-w-lg text-lg leading-relaxed text-ink-soft">
+                  Tell us what you want to start. We ask a few questions, then write a plan built around
+                  Nigerian rules, costs and customers.
+                </p>
+              </div>
 
-              <h1 className="font-display text-5xl font-bold leading-[1.1] tracking-tight text-[#122625]">
-                Turn your business idea into{" "}
-                <span className="text-[#16bfcc]">a plan</span>
-              </h1>
+              <div className="ink-card rounded-3xl p-5 sm:p-6">
+                <IdeaForm />
+              </div>
 
-              <p className="max-w-lg text-lg font-medium leading-relaxed text-[#6d7f7d]">
-                Describe what you want to build. We&apos;ll ask a few quick
-                questions, then generate a business plan grounded in Nigerian
-                market and regulatory context.
+              <p className="text-sm font-medium text-ink-soft">
+                No wahala: it&apos;s free to start and needs no card.
               </p>
             </div>
 
-            <div className="w-full max-w-xl rounded-3xl border border-[#c1edf0] bg-transparent p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_16px_40px_-20px_rgba(0,0,0,0.18)]">
-              <IdeaForm />
+            <LivePlanDoc />
+          </div>
+        </section>
+
+        {/* ── How it works: flip cards ───────────────────────── */}
+        <section className="w-full px-6 pb-24">
+          <div className="mx-auto max-w-5xl">
+            <div className="mx-auto max-w-xl text-center">
+              <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-deep sm:text-4xl">
+                From &ldquo;where do I start?&rdquo; to a plan you can act on.
+              </h2>
+              <p className="mt-3 text-lg leading-relaxed text-ink-soft">
+                Three steps. Flip a card to see what happens in each.
+              </p>
             </div>
 
-            <p className="text-sm font-medium text-[#122625]">
-              No wahala — free to start, no card required.
-            </p>
+            <div className="mt-12 grid gap-8 md:grid-cols-3">
+              {STEPS.map((step, i) => (
+                <FlipCard
+                  key={step.title}
+                  step={i + 1}
+                  title={step.title}
+                  description={step.description}
+                  illustration={step.illustration}
+                  backTitle={step.backTitle}
+                  backPoints={step.backPoints}
+                />
+              ))}
+            </div>
           </div>
+        </section>
 
-          {/* ── Document preview illustration ────────────────── */}
-          <div className="hidden lg:flex lg:justify-center">
-            <div className="relative w-full max-w-sm">
-              <div
-                aria-hidden="true"
-                className="absolute -bottom-4 -right-4 h-full w-full rounded-2xl border border-[#c1edf0] bg-[#effbfa]"
-              />
-              <div className="relative rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl">
-                <div className="mb-4 flex items-center gap-3 border-b border-zinc-100 pb-4">
-                  <span className="rounded-lg bg-cyan-50 p-2 text-cyan-600">
-                    <FileText size={20} />
+        {/* ── What's inside ──────────────────────────────────── */}
+        <section className="w-full border-y-2 border-deep bg-white px-6 py-20">
+          <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-deep">
+                Thirteen sections, written for how business works here.
+              </h2>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {PLAN_SECTIONS.map((name) => (
+                  <span
+                    key={name}
+                    className="rounded-full border-2 border-line bg-paper px-3 py-1 text-sm font-medium text-deep transition-colors hover:border-deep hover:bg-mist"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <ul className="flex flex-col gap-5">
+              {NIGERIA_NOTES.map(({ icon: Icon, title, body }) => (
+                <li key={title} className="flex gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-deep bg-kraft shadow-[3px_3px_0_0_var(--color-deep)]">
+                    <Icon size={22} className="text-deep" />
                   </span>
                   <div>
-                    <p className="font-display text-sm font-semibold text-zinc-900">
-                      Business Plan
-                    </p>
-                    <p className="text-xs text-zinc-500">Executive Summary</p>
+                    <h3 className="font-display text-lg font-bold text-deep">{title}</h3>
+                    <p className="mt-1 leading-relaxed text-ink-soft">{body}</p>
                   </div>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  <div className="h-2.5 w-full rounded-full bg-zinc-100" />
-                  <div className="h-2.5 w-11/12 rounded-full bg-zinc-100" />
-                  <div className="h-2.5 w-full rounded-full bg-zinc-100" />
-                  <div className="h-2.5 w-4/5 rounded-full bg-zinc-100" />
-                  <div className="mt-2 h-2.5 w-1/2 rounded-full bg-[#c1edf0]" />
-                </div>
-              </div>
-            </div>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        </section>
 
-        {/* ── How it works ─────────────────────────────────── */}
-        <div className="mt-24 w-full max-w-5xl">
-          <h2 className="font-display text-center text-2xl font-bold tracking-tight text-[#122625]">
-            How it works
-          </h2>
-
-          <div className="mt-10 grid gap-8 sm:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <div
-                key={step.title}
-                className="flex flex-col items-center gap-3 text-center sm:items-start sm:text-left"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#effbfa] text-[#0ca7b2]">
-                  <step.icon size={20} />
-                </span>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#6d7f7d]">
-                    Step {i + 1}
-                  </p>
-                  <h3 className="font-display text-lg font-semibold text-[#122625]">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-[#6d7f7d]">{step.description}</p>
-                </div>
-              </div>
-            ))}
+        {/* ── Closing call to action ─────────────────────────── */}
+        <section className="w-full px-6 py-20">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 rounded-[2rem] border-2 border-deep bg-deep px-8 py-14 text-center shadow-[8px_8px_0_0_var(--color-teal-500)]">
+            <h2 className="font-display text-3xl font-bold leading-tight text-white sm:text-4xl">
+              Got an idea? Put it on paper today.
+            </h2>
+            <p className="max-w-md text-lg leading-relaxed text-white/80">
+              It takes a few minutes to answer the questions, and about a minute for the plan to be written.
+            </p>
+            <Link href="#start" className="btn-chunk rounded-xl bg-marigold px-7 py-3 text-base hover:bg-marigold">
+              <ArrowUp size={18} strokeWidth={2.5} />
+              Start my plan
+            </Link>
           </div>
-        </div>
+        </section>
       </main>
+
+      <AppFooter />
     </div>
   );
 }

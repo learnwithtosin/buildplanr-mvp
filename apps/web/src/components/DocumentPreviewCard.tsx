@@ -1,112 +1,108 @@
 "use client";
 
-import { FileText, FileType, Download } from "lucide-react";
-import type { ReactNode } from "react";
-
-const EXCERPT_MAX_CHARS = 220;
-
-/**
- * Truncates `text` to a whole-word boundary at or before `maxChars`,
- * appending an ellipsis. Never cuts mid-word, since this is shown as a
- * genuine excerpt of the generated plan (not a decorative placeholder).
- */
-function truncateToWord(text: string, maxChars: number): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= maxChars) return trimmed;
-
-  const slice = trimmed.slice(0, maxChars);
-  const lastSpace = slice.lastIndexOf(" ");
-  const safeSlice = lastSpace > 0 ? slice.slice(0, lastSpace) : slice;
-  return `${safeSlice}…`;
-}
+import { useRef, type ReactNode } from "react";
+import { FileText, FileType } from "lucide-react";
+import { LogoMark } from "@/components/Illustrations";
 
 interface DocumentPreviewCardProps {
   type: "pdf" | "docx";
   title: string;
   description: string;
   action: ReactNode;
-  /**
-   * Real text pulled from the generated plan (e.g. content.executiveSummary)
-   * used to render a genuine excerpt. Required — this card no longer shows
-   * placeholder content, so callers must have completed plan content before
-   * rendering it.
-   */
-  excerpt: string;
-  /** Rough total page/section count, shown as "~N sections" under the excerpt. */
-  sectionCount: number;
+  /** Names of the sections in the downloaded document, shown as its contents. */
+  sections: readonly string[];
 }
 
+/** How many section names show on the mini page before collapsing to "+ N more". */
+const VISIBLE_SECTIONS = 6;
+/** Maximum tilt in degrees as the pointer moves across the card. */
+const MAX_TILT = 7;
+
+/**
+ * A download option drawn as the document itself: a little page with the
+ * plan's contents on it that leans toward the pointer, with the download
+ * button underneath. The two formats are told apart by colour and shape,
+ * not by repeating the same text twice.
+ */
 export default function DocumentPreviewCard({
   type,
   title,
   description,
   action,
-  excerpt,
-  sectionCount,
+  sections,
 }: DocumentPreviewCardProps) {
-  const Icon = type === "pdf" ? FileType : FileText;
-  const displayExcerpt = truncateToWord(excerpt, EXCERPT_MAX_CHARS);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const isPdf = type === "pdf";
+  const Icon = isPdf ? FileType : FileText;
+  const shown = sections.slice(0, VISIBLE_SECTIONS);
+  const hidden = Math.max(sections.length - shown.length, 0);
+
+  function handleMove(event: React.PointerEvent<HTMLDivElement>) {
+    const el = pageRef.current;
+    if (!el || event.pointerType === "touch") return;
+    const rect = el.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(900px) rotateX(${(-y * MAX_TILT).toFixed(2)}deg) rotateY(${(x * MAX_TILT).toFixed(2)}deg) translateY(-4px)`;
+  }
+
+  function handleLeave() {
+    if (pageRef.current) pageRef.current.style.transform = "";
+  }
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-      {/* Card Header */}
-      <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-cyan-50 p-3 text-cyan-600">
-            <Icon size={26} />
-          </div>
-
-          <div>
-            <h3 className="font-display font-semibold text-zinc-900">{title}</h3>
-
-            <p className="text-sm text-zinc-500">
-              {description}
-            </p>
-          </div>
-        </div>
-
-        <span
-          className={`rounded-full px-3 py-1 text-[10px] font-semibold tracking-wide ${
-            type === "pdf"
-              ? "bg-red-100 text-red-600"
-              : "bg-blue-100 text-blue-600"
-          }`}
+    <div className="flex flex-col gap-4">
+      <div onPointerMove={handleMove} onPointerLeave={handleLeave} className="relative">
+        {/* the page */}
+        <div
+          ref={pageRef}
+          className="ink-card relative overflow-hidden rounded-2xl transition-transform duration-200 ease-out will-change-transform"
         >
-          {type === "pdf" ? "PDF" : "DOCX"}
-        </span>
-      </div>
-
-      {/* Real excerpt from the generated plan */}
-      <div className="p-6">
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <div className="mb-3">
-            <p className="text-sm font-bold text-zinc-800">
-              BuildPlan
-            </p>
-
-            <p className="text-xs text-zinc-500">
-              Nigerian Business Plan — Executive Summary
-            </p>
-          </div>
-
-          <p className="text-sm leading-6 text-zinc-600">{displayExcerpt}</p>
-
-          <div className="mt-5 flex items-center gap-2 border-t border-dashed border-zinc-200 pt-4 text-zinc-400">
-            <Icon size={18} />
-            <span className="text-xs font-medium">
-              {sectionCount} section{sectionCount === 1 ? "" : "s"} in the full document
+          <div className={`flex items-center justify-between px-5 py-3 ${isPdf ? "bg-teal-500" : "bg-marigold"}`}>
+            <div className="flex items-center gap-2">
+              <LogoMark className="h-6 w-6" />
+              <span className="font-display text-sm font-bold text-deep">Business plan</span>
+            </div>
+            <span className="rounded-full border-2 border-deep bg-white px-2.5 py-0.5 text-xs font-bold text-deep">
+              {isPdf ? "PDF" : "DOCX"}
             </span>
           </div>
+
+          <div className="px-5 pb-5 pt-4">
+            <p className="text-xs font-semibold text-ink-soft">Contents</p>
+            <ol className="mt-2 flex flex-col gap-2">
+              {shown.map((name, i) => (
+                <li key={name} className="flex items-center gap-2.5 text-sm font-medium text-deep">
+                  <span className="w-4 text-right text-xs tabular-nums text-ink-soft">{i + 1}</span>
+                  <span className="h-px flex-1 border-t-2 border-dotted border-line" aria-hidden="true" />
+                  <span className="shrink-0">{name}</span>
+                </li>
+              ))}
+            </ol>
+            {hidden > 0 && (
+              <p className="mt-3 text-xs font-semibold text-ink-soft">+ {hidden} more sections</p>
+            )}
+          </div>
+
+          {/* folded corner */}
+          <span
+            aria-hidden="true"
+            className="absolute bottom-0 right-0 h-8 w-8 bg-gradient-to-tl from-kraft-deep via-kraft to-transparent [clip-path:polygon(100%_0,100%_100%,0_100%)]"
+          />
         </div>
       </div>
 
-      {/* Download */}
-      <div className="mt-auto border-t border-zinc-100 bg-zinc-50 px-5 py-4">
-        <div className="flex items-center justify-center gap-2">
-          <Download size={18} />
-          {action}
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-deep bg-kraft">
+          <Icon size={20} className="text-deep" />
+        </span>
+        <div>
+          <h3 className="font-display font-bold text-deep">{title}</h3>
+          <p className="text-sm leading-snug text-ink-soft">{description}</p>
         </div>
       </div>
+
+      {action}
     </div>
   );
 }

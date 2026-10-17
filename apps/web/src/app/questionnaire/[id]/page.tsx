@@ -83,48 +83,47 @@ export default function QuestionnairePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#ffffff]">
+    <div className="flex min-h-screen flex-col">
       <AppHeader />
 
       {/* ── Main ─────────────────────────────────────────────── */}
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12 mt-10">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-28 sm:px-6">
         {state.status === "loading" && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-sm text-[#122625]">
-              Loading your questionnaire…
-            </span>
+          <div role="status" className="ink-card flex flex-col gap-4 rounded-3xl p-8">
+            <p className="font-display font-bold text-deep">Loading your questionnaire…</p>
+            <div className="shimmer h-3 w-full rounded-full" />
+            <div className="shimmer h-3 w-4/5 rounded-full" />
+            <div className="shimmer h-3 w-3/5 rounded-full" />
           </div>
         )}
 
         {state.status === "error" && (
-          <div className="flex flex-col gap-4">
+          <div className="ink-card flex flex-col gap-4 rounded-3xl p-8">
             <InlineError message={state.message} />
-            <Link
-              href="/"
-              className="self-start text-sm font-medium text-[#122625] underline underline-offset-2"
-            >
-              ← Back to home
+            <Link href="/" className="btn-ghost self-start rounded-xl px-5 py-2.5 text-sm">
+              Back to home
             </Link>
           </div>
         )}
 
         {state.status === "ready" && (
           <>
-            <div className="mb-10">
-              <h1 className="text-2xl font-semibold tracking-tight text-[#122625]">
+            <div className="mb-8">
+              <h1 className="font-display text-3xl font-bold tracking-tight text-deep">
                 Tell us about your business
               </h1>
-              <p className="mt-2 text-sm text-zinc-500">
-                Answer the questions below so we can tailor your Nigerian
-                business plan.
+              <p className="mt-2 leading-relaxed text-ink-soft">
+                Your answers shape the plan, so be as specific as you can.
               </p>
             </div>
 
-            <QuestionnaireForm
-              planId={state.planId}
-              initialPage={state.page}
-              onSuccess={handleSuccess}
-            />
+            <div className="ink-card rounded-3xl p-6 sm:p-8">
+              <QuestionnaireForm
+                planId={state.planId}
+                initialPage={state.page}
+                onSuccess={handleSuccess}
+              />
+            </div>
           </>
         )}
       </main>

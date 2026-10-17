@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { ApiError, postQuestionnaire } from "@/lib/api";
 import InlineError from "@/components/InlineError";
 
@@ -9,14 +10,94 @@ const MIN_LENGTH = 10;
 const MAX_LENGTH = 500;
 const ERROR_DISMISS_MS = 5000;
 
+/** Ideas typed into the empty box as a placeholder, and offered as one-tap starters. */
+const EXAMPLES = [
+  "A mobile car wash for busy professionals in Lagos",
+  "A bakery taking cake and small-chops orders in Jos",
+  "A POS and airtime shop near a university campus",
+  "A poultry farm supplying eggs to restaurants in Ibadan",
+  "A fashion brand selling ankara pieces on Instagram",
+] as const;
+
+const STARTERS = [
+  { label: "Car wash", idea: EXAMPLES[0] },
+  { label: "Bakery", idea: EXAMPLES[1] },
+  { label: "POS shop", idea: EXAMPLES[2] },
+  { label: "Poultry farm", idea: EXAMPLES[3] },
+  { label: "Fashion brand", idea: EXAMPLES[4] },
+] as const;
+
 /** True when the trimmed input has no letters at all — e.g. "1234567890" or "!!!@@@###". */
 function hasNoLetters(value: string): boolean {
   return value.trim().length > 0 && !/[a-zA-Z]/.test(value);
 }
 
+/**
+ * Types the examples into the placeholder, one after another, while the box
+ * is empty and unfocused. Falls back to a still placeholder for people who
+ * prefer reduced motion.
+ */
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mql = window.matchMedia(REDUCED_MOTION_QUERY);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+function useTypedPlaceholder(active: boolean): string {
+  const [text, setText] = useState<string>(EXAMPLES[0]);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => true,
+  );
+
+  useEffect(() => {
+    if (!active || reducedMotion) return;
+
+    let exampleIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function step() {
+      const full = EXAMPLES[exampleIndex];
+      if (!deleting) {
+        charIndex += 1;
+        setText(full.slice(0, charIndex));
+        if (charIndex === full.length) {
+          deleting = true;
+          timeoutId = setTimeout(step, 1800);
+          return;
+        }
+        timeoutId = setTimeout(step, 38);
+      } else {
+        charIndex -= 2;
+        if (charIndex <= 0) {
+          charIndex = 0;
+          deleting = false;
+          exampleIndex = (exampleIndex + 1) % EXAMPLES.length;
+          setText("");
+          timeoutId = setTimeout(step, 350);
+          return;
+        }
+        setText(full.slice(0, charIndex));
+        timeoutId = setTimeout(step, 16);
+      }
+    }
+
+    timeoutId = setTimeout(step, 600);
+    return () => clearTimeout(timeoutId);
+  }, [active, reducedMotion]);
+
+  return reducedMotion ? `e.g. ${EXAMPLES[0]}` : text;
+}
+
 export default function IdeaForm() {
   const router = useRouter();
   const [businessIdea, setBusinessIdea] = useState("");
+  const [focused, setFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +107,8 @@ export default function IdeaForm() {
   const isTooLong = length > MAX_LENGTH;
   const isMeaningless = hasNoLetters(trimmed);
   const isValid = length >= MIN_LENGTH && length <= MAX_LENGTH && !isMeaningless;
+
+  const placeholder = useTypedPlaceholder(businessIdea === "" && !focused);
 
   // Auto-dismiss the error a few seconds after it appears. Re-runs whenever
   // `error` changes, so a fresh error always gets its own full countdown
@@ -46,10 +129,10 @@ export default function IdeaForm() {
     if (!isValid) {
       setError(
         isTooShort
-          ? `Tell us a bit more at least ${MIN_LENGTH} characters not just numbers or symbols.`
+          ? `Tell us a bit more: at least ${MIN_LENGTH} characters, not just numbers or symbols.`
           : isTooLong
             ? `That's a lot! Keep it under ${MAX_LENGTH} characters.`
-            : "Please describe your idea in words not just numbers or symbols.",
+            : "Please describe your idea in words, not just numbers or symbols.",
       );
       return;
     }
@@ -85,9 +168,9 @@ export default function IdeaForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-xl flex-col gap-3">
-      <label htmlFor="businessIdea" className="text-sm font-bold text-[#6d7f7d] uppercase">
-        Describe your business idea
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3 text-left">
+      <label htmlFor="businessIdea" className="font-display text-base font-bold text-deep">
+        What do you want to start?
       </label>
 
       <textarea
@@ -96,35 +179,54 @@ export default function IdeaForm() {
         rows={4}
         value={businessIdea}
         onChange={(event) => setBusinessIdea(event.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         disabled={isSubmitting}
-        placeholder="e.g. A mobile car wash service for busy professionals in Lagos..."
-        className="w-full rounded-lg border border-[#c1edf0] p-3 text-base text-[#122625] placeholder:text-[#aeb9b8] focus:border-[#16bfcc] focus:ring-1 focus:ring-[#16bfcc] focus:outline-none disabled:opacity-60 bg-[#effbfa]"
+        placeholder={placeholder}
+        className="field resize-none text-base leading-relaxed"
       />
-      {error && <InlineError message={error} />}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className={`text-sm font-semibold text-[#6d7f7d] ${isTooLong || isMeaningless ? "text-red-600" : ""}`}>
-          {length}/{MAX_LENGTH} characters
+      {/* One-tap starters, so nobody faces a blank box. */}
+      <div className="flex flex-wrap items-center gap-2" aria-label="Example ideas">
+        <span className="text-sm text-ink-soft">Or start from:</span>
+        {STARTERS.map((starter) => (
+          <button
+            key={starter.label}
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => setBusinessIdea(starter.idea)}
+            className="rounded-full border-2 border-line bg-white px-3 py-1 text-sm font-medium text-deep transition-all hover:-translate-y-0.5 hover:border-deep hover:bg-mist focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marigold disabled:opacity-50"
+          >
+            {starter.label}
+          </button>
+        ))}
+      </div>
+
+      {error && <InlineError message={error} className="animate-pop" />}
+
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+        <span
+          className={`text-sm font-medium tabular-nums ${
+            isTooLong || isMeaningless ? "text-red-700" : "text-ink-soft"
+          }`}
+        >
+          {length}/{MAX_LENGTH}
         </span>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-[#0ca7b2] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isSubmitting ? "Generating your questionnaire…" : "Get started"}
-          {!isSubmitting && (
-            <svg
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
+        <button type="submit" disabled={isSubmitting} className="btn-chunk rounded-xl px-6 py-3 text-base">
+          {isSubmitting ? (
+            <>
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-deep/30 border-t-deep"
+              />
+              Writing your questions…
+            </>
+          ) : (
+            <>
+              Start my plan
+              <ArrowRight size={18} strokeWidth={2.5} />
+            </>
           )}
         </button>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Sparkles, X } from "lucide-react";
 import type { Question, QuestionnairePage, AnswersMap } from "types";
 import { FIXED_QUESTION_IDS } from "types";
 import { ApiError, fetchNextQuestionnairePage, submitBusinessPlan, suggestBusinessNames } from "@/lib/api";
@@ -58,6 +59,7 @@ export default function QuestionnaireForm({ planId, initialPage, onSuccess }: Pr
   const isFirstPage = pageIndex === 0;
   const onLastKnownPage = pageIndex === pages.length - 1;
   const isFinalStep = onLastKnownPage && lastPageReached;
+  const busy = fetchingNextPage || submitting;
 
   function handleBoolean(id: string, value: boolean) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -169,143 +171,194 @@ export default function QuestionnaireForm({ planId, initialPage, onSuccess }: Pr
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-8">
       {/* ── Progress ─────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-[#6d7f7d]">
-            Page {pageIndex + 1} of {DISPLAYED_TOTAL_PAGES}
-          </span>
-          <span className="text-sm font-semibold text-[#122625]">{currentPage.title}</span>
-        </div>
-        <div className="flex gap-1.5">
-          {Array.from({ length: DISPLAYED_TOTAL_PAGES }, (_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i <= pageIndex ? "bg-[#16bfcc]" : "bg-zinc-200"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+      <nav aria-label="Questionnaire progress" className="flex flex-col gap-3">
+        <ol className="flex items-center">
+          {Array.from({ length: DISPLAYED_TOTAL_PAGES }, (_, i) => {
+            const reached = i <= pageIndex;
+            const completed = i < pageIndex;
+            return (
+              <li key={i} className="flex flex-1 items-center last:flex-none">
+                <span
+                  aria-current={i === pageIndex ? "step" : undefined}
+                  className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 font-display text-sm font-bold transition-all duration-300 ${
+                    completed
+                      ? "border-deep bg-deep text-white"
+                      : reached
+                        ? "border-deep bg-teal-500 text-deep shadow-[3px_3px_0_0_var(--color-deep)]"
+                        : "border-line bg-white text-ink-soft"
+                  }`}
+                >
+                  {completed ? <Check size={16} strokeWidth={3.5} /> : i + 1}
+                  {i === pageIndex && (
+                    <span className="pulse-ring pointer-events-none absolute inset-0 rounded-full border-2 border-teal-500" />
+                  )}
+                </span>
+                {i < DISPLAYED_TOTAL_PAGES - 1 && (
+                  <span className="mx-2 h-1 flex-1 overflow-hidden rounded-full bg-line">
+                    <span
+                      className={`block h-full origin-left rounded-full bg-deep transition-transform duration-500 ${
+                        completed ? "scale-x-100" : "scale-x-0"
+                      }`}
+                    />
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="text-sm text-ink-soft">
+          Page {pageIndex + 1} of {DISPLAYED_TOTAL_PAGES}
+          <span className="mx-2 text-line">|</span>
+          <span className="font-semibold text-deep">{currentPage.title}</span>
+        </p>
+      </nav>
 
       {/* ── Current page's questions ─────────────────────────── */}
-      {currentPage.questions.map((question, index) => (
-        <div key={question.id} className="flex flex-col gap-3">
-          <label className="text-base font-medium text-[#122625]">
-            <span className="mr-2 text-sm font-semibold text-[#122625]">
-              {index + 1}.
-            </span>
-            {question.label}
-          </label>
+      <div key={pageIndex} className="animate-rise flex flex-col gap-7">
+        {currentPage.questions.map((question, index) => (
+          <div key={question.id} className="flex flex-col gap-3">
+            <label htmlFor={question.id} className="flex gap-3 text-base font-semibold leading-snug text-deep">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-kraft text-xs font-bold">
+                {index + 1}
+              </span>
+              <span>{question.label}</span>
+            </label>
 
-          {question.type === "boolean" && (
-            <div className="flex gap-3">
-              {(["Yes", "No"] as const).map((opt) => {
-                const val = opt === "Yes";
-                const selected = answers[question.id] === val;
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => handleBoolean(question.id, val)}
-                    className={`rounded-full border px-6 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] ${
-                      selected
-                        ? "border-[#16bfcc] bg-[#16bfcc] text-white"
-                        : "border-zinc-300 bg-white text-zinc-700 hover:border-[#16bfcc] hover:text-[#16bfcc] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
-                    }`}
-                    aria-pressed={selected}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {question.type === "text" && (
-            <textarea
-              id={question.id}
-              value={answers[question.id] as string}
-              onChange={(e) => handleText(question.id, e.target.value)}
-              rows={3}
-              placeholder="Your answer…"
-              required
-              className="w-full rounded-lg border border-[#c1edf0] bg-[#effbfa] px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 transition-colors focus:border-[#16bfcc] focus:outline-none focus:ring-1 focus:ring-[#16bfcc]"
-            />
-          )}
-
-          {question.type === "select" && (
-            <select
-              id={question.id}
-              value={answers[question.id] as string}
-              onChange={(e) => handleText(question.id, e.target.value)}
-              required
-              className="w-full rounded-lg border border-[#c1edf0] bg-[#effbfa] px-4 py-3 text-sm text-zinc-800 transition-colors focus:border-[#16bfcc] focus:outline-none focus:ring-1 focus:ring-[#16bfcc]"
-            >
-              <option value="" disabled>
-                Select an option…
-              </option>
-              {(question.options ?? []).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Name-suggestion action — only on the fixed business_name field,
-              and only offered while the founder hasn't said "Yes" to
-              already having a name. */}
-          {question.id === FIXED_QUESTION_IDS.name &&
-            answers[FIXED_QUESTION_IDS.hasName] !== true && (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleSuggestNames}
-                  disabled={suggesting}
-                  className="self-start rounded-full border border-[#16bfcc] px-4 py-1.5 text-xs font-semibold text-[#0ca7b2] transition-colors hover:bg-[#effbfa] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {suggesting ? "Thinking of names…" : "✨ Suggest names for me"}
-                </button>
-
-                {suggestionError && <InlineError message={suggestionError} />}
-
-                {suggestions !== null && (
-                  <div className="flex flex-wrap gap-2">
-                    {suggestions.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        onClick={() => handlePickSuggestion(name)}
-                        className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] ${
-                          answers[FIXED_QUESTION_IDS.name] === name
-                            ? "border-[#16bfcc] bg-[#16bfcc] text-white"
-                            : "border-zinc-300 bg-white text-zinc-700 hover:border-[#16bfcc] hover:text-[#16bfcc]"
-                        }`}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {question.type === "boolean" && (
+              <div className="grid grid-cols-2 gap-3 sm:max-w-sm" role="group" aria-label={question.label}>
+                {(["Yes", "No"] as const).map((opt) => {
+                  const val = opt === "Yes";
+                  const selected = answers[question.id] === val;
+                  const Icon = val ? Check : X;
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleBoolean(question.id, val)}
+                      aria-pressed={selected}
+                      className={`flex items-center justify-center gap-2 rounded-xl border-2 px-5 py-3 text-base font-bold transition-all duration-200 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marigold ${
+                        selected
+                          ? "border-deep bg-deep text-white shadow-[4px_4px_0_0_var(--color-teal-500)]"
+                          : "border-line bg-white text-deep hover:-translate-y-0.5 hover:border-deep"
+                      }`}
+                    >
+                      <Icon size={16} strokeWidth={3.5} className={selected ? "animate-pop" : "opacity-40"} />
+                      {opt}
+                    </button>
+                  );
+                })}
               </div>
             )}
-        </div>
-      ))}
 
-      {error && <InlineError message={error} />}
+            {question.type === "text" && (
+              <textarea
+                id={question.id}
+                value={answers[question.id] as string}
+                onChange={(e) => handleText(question.id, e.target.value)}
+                rows={3}
+                placeholder="Your answer…"
+                required
+                className="field resize-none"
+              />
+            )}
+
+            {question.type === "select" && (
+              <div className="relative">
+                <select
+                  id={question.id}
+                  value={answers[question.id] as string}
+                  onChange={(e) => handleText(question.id, e.target.value)}
+                  required
+                  className="field cursor-pointer appearance-none pr-11"
+                >
+                  <option value="" disabled>
+                    Select an option…
+                  </option>
+                  {(question.options ?? []).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={18}
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-deep"
+                />
+              </div>
+            )}
+
+            {/* Name-suggestion action — only on the fixed business_name field,
+                and only offered while the founder hasn't said "Yes" to
+                already having a name. */}
+            {question.id === FIXED_QUESTION_IDS.name &&
+              answers[FIXED_QUESTION_IDS.hasName] !== true && (
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSuggestNames}
+                    disabled={suggesting}
+                    className="btn-ghost self-start rounded-full px-4 py-1.5 text-sm"
+                  >
+                    <Sparkles size={15} className={suggesting ? "animate-spin" : ""} />
+                    {suggesting ? "Thinking of names…" : "Suggest names for me"}
+                  </button>
+
+                  {suggestionError && <InlineError message={suggestionError} />}
+
+                  {suggestions !== null && (
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.map((name, i) => {
+                        const picked = answers[FIXED_QUESTION_IDS.name] === name;
+                        return (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => handlePickSuggestion(name)}
+                            aria-pressed={picked}
+                            style={{ animationDelay: `${i * 70}ms` }}
+                            className={`animate-pop rounded-full border-2 px-4 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marigold ${
+                              picked
+                                ? "border-deep bg-teal-500 text-deep"
+                                : "border-line bg-white text-deep hover:border-deep hover:bg-mist"
+                            }`}
+                          >
+                            {name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+          </div>
+        ))}
+      </div>
+
+      {error && <InlineError message={error} className="animate-pop" />}
+
+      {/* While the next page is being written from the answers just given. */}
+      {fetchingNextPage && (
+        <div role="status" className="flex flex-col gap-2 rounded-xl border-2 border-dashed border-teal-500 bg-mist p-4">
+          <p className="text-sm font-semibold text-deep">Writing your next questions from what you just told us…</p>
+          <div className="shimmer h-2.5 w-full rounded-full" />
+          <div className="shimmer h-2.5 w-2/3 rounded-full" />
+        </div>
+      )}
 
       {/* ── Navigation ───────────────────────────────────────── */}
-      <div className="mt-2 flex items-center gap-3">
-        {!isFirstPage && (
+      <div className="flex items-center justify-between gap-3">
+        {!isFirstPage ? (
           <button
             type="button"
             onClick={handleBack}
-            disabled={submitting || fetchingNextPage}
-            className="self-start rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:border-[#16bfcc] hover:text-[#16bfcc] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={busy}
+            className="btn-ghost rounded-xl px-5 py-3 text-sm"
           >
-            ← Back
+            <ArrowLeft size={16} />
+            Back
           </button>
+        ) : (
+          <span />
         )}
 
         {!isFinalStep && (
@@ -313,19 +366,41 @@ export default function QuestionnaireForm({ planId, initialPage, onSuccess }: Pr
             type="button"
             onClick={handleNext}
             disabled={fetchingNextPage}
-            className="self-start rounded-full bg-[#0ca7b2] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#12a8b0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-chunk rounded-xl px-7 py-3 text-base"
           >
-            {fetchingNextPage ? "Generating your next questions…" : "Next →"}
+            {fetchingNextPage ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-deep/30 border-t-deep"
+                />
+                Writing…
+              </>
+            ) : (
+              <>
+                Next
+                <ArrowRight size={18} strokeWidth={2.5} />
+              </>
+            )}
           </button>
         )}
 
         {isFinalStep && (
-          <button
-            type="submit"
-            disabled={submitting}
-            className="self-start rounded-full bg-[#0ca7b2] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#12a8b0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Generating your plan…" : "Generate Business Plan"}
+          <button type="submit" disabled={submitting} className="btn-chunk rounded-xl bg-marigold px-7 py-3 text-base hover:bg-marigold">
+            {submitting ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-deep/30 border-t-deep"
+                />
+                Starting your plan…
+              </>
+            ) : (
+              <>
+                <Sparkles size={18} />
+                Generate my plan
+              </>
+            )}
           </button>
         )}
       </div>

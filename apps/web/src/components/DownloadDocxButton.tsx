@@ -59,19 +59,19 @@ export default function DownloadDocxButton({ planId }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex flex-col gap-2">
       <button
         type="button"
         onClick={handleDownload}
         disabled={loading}
         aria-busy={loading}
-        className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-[#0ca7b2] px-6 py-2.5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-[#07929c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#12a8b0] disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-chunk w-full rounded-xl px-6 py-3 text-base bg-marigold hover:bg-marigold"
       >
         {loading ? (
           <>
             <span
               aria-hidden="true"
-              className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-400/40 border-t-zinc-600 dark:border-zinc-600/40 dark:border-t-zinc-200"
+              className="h-4 w-4 animate-spin rounded-full border-2 border-deep/30 border-t-deep"
             />
             Preparing Word Doc…
           </>

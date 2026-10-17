@@ -1,21 +1,299 @@
 @import "tailwindcss";
 
+/*
+ * BuildPlanr design tokens.
+ * Teal stays the brand colour; "deep" is the ink used for outlines, offset
+ * shadows and the dark side of flip cards; "kraft" is the paper colour of
+ * every plan document we draw; "marigold" is the single warm highlight.
+ */
+@theme {
+  --color-paper: #f5f8f6;
+  --color-ink: #0f2a2d;
+  --color-ink-soft: #4f6769;
+  --color-deep: #0b3b40;
+  --color-teal-400: #5fd6df;
+  --color-teal-500: #16bfcc;
+  --color-teal-600: #0ca7b2;
+  --color-teal-700: #078d97;
+  --color-mist: #e4f6f7;
+  --color-line: #cfe3e4;
+  --color-kraft: #ecdfb9;
+  --color-kraft-deep: #cdb987;
+  --color-marigold: #f2b84b;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(22 191 204 / 0.10), transparent 60%),
+    radial-gradient(50rem 30rem at -10% 10%, rgb(242 184 75 / 0.08), transparent 60%),
+    var(--color-paper);
+}
+
 /* Distinct heading typeface, separate from the body sans (--font-geist-sans). */
 .font-display {
   font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
 }
 
-@keyframes fade-in {
+/* ── Signature look: chunky outline + offset ink shadow ───────────── */
+@layer components {
+  .ink-card {
+    border: 2px solid var(--color-deep);
+    box-shadow: 6px 6px 0 0 var(--color-deep);
+    background: #fff;
+  }
+
+  .btn-chunk {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 2px solid var(--color-deep);
+    background: var(--color-teal-500);
+    color: var(--color-deep);
+    font-weight: 700;
+    box-shadow: 4px 4px 0 0 var(--color-deep);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background-color 0.2s ease;
+    cursor: pointer;
+  }
+  .btn-chunk:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 var(--color-deep);
+    background: var(--color-teal-400);
+  }
+  .btn-chunk:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--color-deep);
+  }
+  .btn-chunk:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .btn-chunk:focus-visible,
+  .btn-ghost:focus-visible {
+    outline: 3px solid var(--color-marigold);
+    outline-offset: 3px;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 2px solid var(--color-deep);
+    background: #fff;
+    color: var(--color-deep);
+    font-weight: 600;
+    transition:
+      background-color 0.2s ease,
+      transform 0.12s ease;
+    cursor: pointer;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-mist);
+  }
+  .btn-ghost:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .field {
+    width: 100%;
+    border: 2px solid var(--color-line);
+    background: #fff;
+    color: var(--color-ink);
+    border-radius: 0.875rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .field::placeholder {
+    color: #8aa0a2;
+  }
+  .field:hover:not(:disabled) {
+    border-color: var(--color-teal-400);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-deep);
+    box-shadow: 3px 3px 0 0 var(--color-teal-500);
+  }
+}
+
+/* ── Motion ───────────────────────────────────────────────────────── */
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+.animate-rise {
+  animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .animate-fade-in {
   animation: fade-in 0.35s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70% {
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-pop {
+  animation: pop 0.35s ease-out both;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--bob-rot, 0deg));
+  }
+  50% {
+    transform: translateY(-8px) rotate(var(--bob-rot, 0deg));
+  }
+}
+.animate-bob {
+  animation: bob 4.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.animate-blink {
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgb(15 42 45 / 0.07) 25%,
+    rgb(22 191 204 / 0.28) 50%,
+    rgb(15 42 45 / 0.07) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.2s linear infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.pulse-ring {
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-orbit {
+  animation: orbit 9s linear infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 0px), 105vh, 0) rotate(var(--spin, 540deg));
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  position: fixed;
+  top: 0;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 40;
+  animation: confetti-fall var(--dur, 3.2s) cubic-bezier(0.25, 0.6, 0.4, 1) var(--delay, 0s) both;
+}
+
+@keyframes write-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Respect people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .confetti-piece {
+    display: none;
+  }
 }
